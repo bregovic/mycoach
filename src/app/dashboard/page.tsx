@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { logoutAction } from "@/lib/actions/auth";
@@ -30,9 +31,18 @@ export default async function DashboardPage() {
         </p>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          <Link
+            href="/trening"
+            className="group rounded-xl border border-zinc-900 bg-zinc-900 p-5 text-white transition hover:bg-zinc-800"
+          >
+            <h2 className="font-medium">Trénink ▶</h2>
+            <p className="mt-1 text-sm text-zinc-300">Hlasově řízený intervalový trénink (Box)</p>
+            <p className="mt-3 text-xs font-medium uppercase tracking-wide text-zinc-400 group-hover:text-zinc-200">
+              Spustit
+            </p>
+          </Link>
           {[
             { title: "Moje míry", desc: "Váha a % tuku v čase" },
-            { title: "Tréninky", desc: "Historie odcvičeného" },
             { title: "Plány", desc: "Vyber sport a plán" },
           ].map((c) => (
             <div key={c.title} className="rounded-xl border border-zinc-200 bg-white p-5">
