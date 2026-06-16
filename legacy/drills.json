@@ -1,0 +1,750 @@
+{
+  "__README__": {
+    "info": "Tento soubor definuje databázi cvičení. Můžete přidávat vlastní položky do kategorií: warmup, combinations, bag_work, sparring, conditioning.",
+    "format_spec": {
+      "name": "Název cvičení (zobrazuje se na displeji, může obsahovat anglicismy/jména trenérů).",
+      "spokenName": "Český mluvený název (syntéza řeči ho čte v pauze, bez jmen trenérů a cizích slov).",
+      "coop": "Způsob spolupráce: 'najednou' (paralelně), 'stridave' (na střídačku v kole), 'v_pulce' (swap v půlce), 'celé_kolo' (jeden celé kolo, střídání v dalším).",
+      "voiceText": "Detailní český hlasový popis kombinace čtený v pauze.",
+      "type": "Určení typu: 'solo' (sólo), 'pair' (dvojice/skupina), 'any' (obojí)."
+    }
+  },
+  "warmup": [
+    {
+      "name": "Skákání přes švihadlo (Klasická boxerská rozcvička)",
+      "spokenName": "Skákání přes švihadlo",
+      "coop": "najednou",
+      "voiceText": "Skákání přes švihadlo. Uvolněná ramena, lehké tempo.",
+      "type": "solo"
+    },
+    {
+      "name": "Angelo Dundee: Aliho stínový box s prací nohou",
+      "spokenName": "Stínový box z pohybu",
+      "coop": "najednou",
+      "voiceText": "Stínový box z pohybu. Lehký pohyb na špičkách, přední direkt z ústupu.",
+      "type": "any"
+    },
+    {
+      "name": "Boxing Jog & Punch (Běh na místě s direkty)",
+      "spokenName": "Běh na místě s údery",
+      "coop": "najednou",
+      "voiceText": "Běh na místě a rychlé direkty před sebe. Zvedej kolena.",
+      "type": "solo"
+    },
+    {
+      "name": "Cus D'Amato: Peek-a-boo rozcvička úhybů (Slip & Roll)",
+      "spokenName": "Rozcvička úhybů hlavou",
+      "coop": "najednou",
+      "voiceText": "Stínový box. Ruce u tváří, úhyby hlavou do stran a úhyby pod údery.",
+      "type": "any"
+    },
+    {
+      "name": "Freddie Roach: Slip rope rozcvička (Slip line drill)",
+      "spokenName": "Úhyby pod provazem",
+      "coop": "najednou",
+      "voiceText": "Pohyb podél pomyslné šňůry. Úhyby hlavou střídavě vlevo a vpravo, ruce u tváří.",
+      "type": "any"
+    },
+    {
+      "name": "Roger Mayweather: Rozehřátí ramen rolováním (Shoulder roll warmup)",
+      "spokenName": "Rozcvička obranného rolování ramenem",
+      "coop": "najednou",
+      "voiceText": "Stínový box s předním ramenem nahoře. Rolování ramenem proti pomyslnému zadnímu direktu, zpětný přední hák.",
+      "type": "any"
+    },
+    {
+      "name": "Kronk Gym (Steward): Rozcvička práce nohou do stran (Lateral steps)",
+      "spokenName": "Rozcvička kroků do stran",
+      "coop": "najednou",
+      "voiceText": "Lehký krok do strany, přední direkt, krok zpět. Drž vyvážený postoj a dýchej.",
+      "type": "solo"
+    },
+    {
+      "name": "Jack Dempsey: Rozcvička padajícího kroku (Falling step jab)",
+      "spokenName": "Rozcvička kroku s předním direktem",
+      "coop": "najednou",
+      "voiceText": "Padající krok vpřed s předním direktem. Přenes váhu do úderu, vrať se do postoje.",
+      "type": "solo"
+    },
+    {
+      "name": "Mobilita kyčlí a ramen před tréninkem (Dynamický strečink)",
+      "spokenName": "Rozhýbání kyčlí a ramen",
+      "coop": "najednou",
+      "voiceText": "Krouživé pohyby pažemi a rotace trupu. Rozhýbej kyčle a ramena před zátěží.",
+      "type": "any"
+    },
+    {
+      "name": "Klasický lehký poklus na místě (Jogging warmup)",
+      "spokenName": "Lehký poklus na místě",
+      "coop": "najednou",
+      "voiceText": "Lehký poklus na místě. Rozproudi krev, uvolni ramena, dýchej nosem.",
+      "type": "any"
+    },
+    {
+      "name": "Poskoky a panáci (Jumping jacks)",
+      "spokenName": "Panáci",
+      "coop": "najednou",
+      "voiceText": "Panáci. Upaž a rozkroč, pak zpět. Plynulé tempo, rozehřej celé tělo.",
+      "type": "any"
+    },
+    {
+      "name": "Kroužení rameny a pažemi (Arm circles)",
+      "spokenName": "Kroužení rameny",
+      "coop": "najednou",
+      "voiceText": "Velké kroužky pažemi dopředu a pak dozadu. Uvolni ramena.",
+      "type": "any"
+    },
+    {
+      "name": "Rotace trupu a kroužení boky (Hip rotations)",
+      "spokenName": "Rotace trupu a boků",
+      "coop": "najednou",
+      "voiceText": "Ruce v bok, krouži pánví a rotuj trupem do stran. Rozhýbej páteř.",
+      "type": "any"
+    },
+    {
+      "name": "Vysoká kolena a zakopávání (High knees)",
+      "spokenName": "Vysoká kolena",
+      "coop": "najednou",
+      "voiceText": "Běh na místě s vysokými koleny, pak zakopávání k hýždím. Lehce a rychle.",
+      "type": "any"
+    },
+    {
+      "name": "Klasická rozcvička krku boxera (Neck mobility)",
+      "spokenName": "Rozhýbání krku",
+      "coop": "najednou",
+      "voiceText": "Pomalé předklony a otáčení hlavy do stran. Kontrolovaně, připrav krk na zátěž.",
+      "type": "any"
+    }
+  ],
+  "combinations": [
+    {
+      "name": "Cus D'Amato: Peek-a-boo úhyb vlevo + Tysonův hák na spodek",
+      "spokenName": "Úhyb vlevo a přední hák",
+      "coop": "v_pulce",
+      "voiceText": "Úhyb vlevo, přední hák na tělo, přední hák na hlavu.",
+      "type": "any"
+    },
+    {
+      "name": "Cus D'Amato: Peek-a-boo slip & counter (Kombinace 7-1-2)",
+      "spokenName": "Úhyb vlevo, zvedák a hák",
+      "coop": "stridave",
+      "voiceText": "Úhyb vlevo, přední zvedák, zadní direkt, přední hák.",
+      "type": "any"
+    },
+    {
+      "name": "Freddie Roach: Pacquiao's 3-step pivot & hook",
+      "spokenName": "Úkrok do strany a přední hák",
+      "coop": "v_pulce",
+      "voiceText": "Přední, přední, zadní, rychlý úkrok do strany, přední hák.",
+      "type": "any"
+    },
+    {
+      "name": "Freddie Roach: Kontr proti jabu soupeře (Slip inside & counter)",
+      "spokenName": "Kontr po úhybu vpravo",
+      "coop": "v_pulce",
+      "voiceText": "Úhyb vpravo dovnitř úderu, zadní direkt na tělo, přední hák na hlavu.",
+      "type": "any"
+    },
+    {
+      "name": "Teddy Atlas: 'The Wall' (Jab - Cross - Roll - Pivot - Cross)",
+      "spokenName": "Úhyb pod hákem a úkrok",
+      "coop": "v_pulce",
+      "voiceText": "Přední, zadní, úhyb pod hákem, úkrok do strany, zadní direkt.",
+      "type": "any"
+    },
+    {
+      "name": "Angelo Dundee: Sugar Ray Leonard's triple hook",
+      "spokenName": "Úhyb pod hákem a dvojitý hák",
+      "coop": "v_pulce",
+      "voiceText": "Přední, zadní, úhyb pod hákem, přední hák na tělo, přední hák na hlavu.",
+      "type": "any"
+    },
+    {
+      "name": "Kronk Gym (Steward): Dlouhá 1-2 se zkrácením vzdálenosti",
+      "spokenName": "Dlouhé direkty s krokem vpřed",
+      "coop": "v_pulce",
+      "voiceText": "Dlouhý přední direkt, tvrdý zadní direkt s krokem vpřed.",
+      "type": "any"
+    },
+    {
+      "name": "Kronk Gym (Steward): 1-2 - Úskok vzad - 1-2",
+      "spokenName": "Direkty, úskok vzad a direkty",
+      "coop": "v_pulce",
+      "voiceText": "Přední, zadní, úskok vzad, přední, zadní.",
+      "type": "any"
+    },
+    {
+      "name": "Lapy ve dvojici: Roachův nácvik na reakci zvedáků",
+      "spokenName": "Nácvik reakce zvedáků",
+      "coop": "v_pulce",
+      "voiceText": "Přední hák, úhyb vpravo, zadní zvedák, přední hák.",
+      "type": "pair"
+    },
+    {
+      "name": "Lapy ve dvojici: Dundeeho nácvik kontrů",
+      "spokenName": "Nácvik kontrů na lapy",
+      "coop": "v_pulce",
+      "voiceText": "Jeden útočí zadním direktem, obránce dělá úhyb vlevo a vrací přední hák a zadní direkt.",
+      "type": "pair"
+    },
+    {
+      "name": "Cus D'Amato: Číselný systém 7-2 (Jab - zadní direkt)",
+      "spokenName": "Přední a zadní direkt",
+      "coop": "v_pulce",
+      "voiceText": "Přední direkt na hlavu, zadní direkt na hlavu. Po úderech rychle ruce zpět do krytu.",
+      "type": "any"
+    },
+    {
+      "name": "Cus D'Amato: Tysonova oblíbená 3-2 (Levý zvedák - pravý direkt)",
+      "spokenName": "Přední zvedák a zadní direkt",
+      "coop": "v_pulce",
+      "voiceText": "Úhyb dolů, přední zvedák na bradu, zadní direkt na hlavu.",
+      "type": "any"
+    },
+    {
+      "name": "Cus D'Amato: Kombinace 5-2-3 (Hák na tělo - direkt - zvedák)",
+      "spokenName": "Hák na tělo, direkt a zvedák",
+      "coop": "v_pulce",
+      "voiceText": "Přední hák na tělo, zadní direkt na hlavu, přední zvedák.",
+      "type": "any"
+    },
+    {
+      "name": "Mike Tyson: Smrtící 6-4 (Hák na tělo - pravý zvedák)",
+      "spokenName": "Hák na tělo a zadní zvedák",
+      "coop": "v_pulce",
+      "voiceText": "Úhyb pod úder, zadní hák na tělo, zadní zvedák na bradu.",
+      "type": "any"
+    },
+    {
+      "name": "Roger Mayweather: Kontr po rolování ramenem (Roll & cross)",
+      "spokenName": "Rolování ramenem a zadní direkt",
+      "coop": "v_pulce",
+      "voiceText": "Rolování předním ramenem proti zadnímu direktu, okamžitý zadní direkt přes ruku.",
+      "type": "any"
+    },
+    {
+      "name": "Floyd Mayweather: Catch & counter (Záchyt jabu a kontr)",
+      "spokenName": "Záchyt direktu a kontr",
+      "coop": "v_pulce",
+      "voiceText": "Zachyť přední direkt zadní rukavicí, vrať přední direkt a zadní direkt.",
+      "type": "any"
+    },
+    {
+      "name": "George Benton: Philly shell - úkrok a hák (Shell pivot hook)",
+      "spokenName": "Obranný postoj a přední hák s úkrokem",
+      "coop": "celé_kolo",
+      "voiceText": "Přední rameno nahoře, krok do strany, přední hák, úkrok pryč z dosahu.",
+      "type": "any"
+    },
+    {
+      "name": "Check hook (Kontrolní hák proti náběhu)",
+      "spokenName": "Kontrolní hák s otočkou",
+      "coop": "celé_kolo",
+      "voiceText": "Proti náběhu soupeře přední hák a otočka na přední noze, zadní noha opíše oblouk.",
+      "type": "any"
+    },
+    {
+      "name": "Emanuel Steward: Dvojitý direkt a zadní direkt (Double jab cross)",
+      "spokenName": "Dvojitý přední direkt a zadní direkt",
+      "coop": "v_pulce",
+      "voiceText": "Dvojitý přední direkt, tvrdý zadní direkt s krokem vpřed.",
+      "type": "any"
+    },
+    {
+      "name": "Freddie Roach: Klasická čtyřka 1-2-3-2",
+      "spokenName": "Direkt, direkt, hák, direkt",
+      "coop": "v_pulce",
+      "voiceText": "Přední direkt, zadní direkt, přední hák, zadní direkt.",
+      "type": "any"
+    },
+    {
+      "name": "Teddy Atlas: Direkt na tělo a hák na hlavu (Body-head split)",
+      "spokenName": "Direkt na tělo a hák na hlavu",
+      "coop": "v_pulce",
+      "voiceText": "Přední direkt na tělo, zadní direkt na hlavu, přední hák na hlavu.",
+      "type": "any"
+    },
+    {
+      "name": "Lapy ve dvojici: Mayweatherův pull counter (Záklon a kontr)",
+      "spokenName": "Nácvik záklonu a kontru na lapy",
+      "coop": "celé_kolo",
+      "voiceText": "Útočník hází zadní direkt, obránce udělá záklon mimo dosah a vrátí zadní direkt.",
+      "type": "pair"
+    },
+    {
+      "name": "Lapy ve dvojici: Roachova série na rychlost (Speed mitts)",
+      "spokenName": "Rychlostní série na lapy",
+      "coop": "celé_kolo",
+      "voiceText": "Přední, zadní, přední hák, zadní zvedák. Rychle a přesně podle lap.",
+      "type": "pair"
+    },
+    {
+      "name": "Klasická 1-2-3 (Direkt - direkt - hák)",
+      "spokenName": "Direkt, direkt, přední hák",
+      "coop": "v_pulce",
+      "voiceText": "Přední direkt, zadní direkt, přední hák na hlavu.",
+      "type": "any"
+    },
+    {
+      "name": "Klasická 1-2-3-2 (Dvojitý direkt, hák, direkt)",
+      "spokenName": "Direkt, direkt, hák, direkt",
+      "coop": "v_pulce",
+      "voiceText": "Přední direkt, zadní direkt, přední hák, zadní direkt.",
+      "type": "any"
+    },
+    {
+      "name": "Direkt na tělo a hák na hlavu (1b-2-3)",
+      "spokenName": "Direkt na tělo, direkt a hák na hlavu",
+      "coop": "v_pulce",
+      "voiceText": "Přední direkt na tělo, zadní direkt na hlavu, přední hák na hlavu.",
+      "type": "any"
+    },
+    {
+      "name": "Trojitý hák Sugar Ray Robinsona (3-4-3 do těla a hlavy)",
+      "spokenName": "Trojitý hák do těla a hlavy",
+      "coop": "celé_kolo",
+      "voiceText": "Přední hák na tělo, zadní hák na hlavu, přední hák na hlavu.",
+      "type": "any"
+    },
+    {
+      "name": "Zvedák a kříž (Uppercut - cross finish)",
+      "spokenName": "Zvedák a zadní direkt",
+      "coop": "v_pulce",
+      "voiceText": "Přední zvedák zvedne soupeři hlavu, hned zadní direkt na bradu.",
+      "type": "any"
+    },
+    {
+      "name": "Změna úrovně: direkt na hlavu, zadní zvedák na tělo (1-6)",
+      "spokenName": "Direkt na hlavu a zvedák na tělo",
+      "coop": "v_pulce",
+      "voiceText": "Přední direkt na hlavu, pokrč kolena a zadní zvedák do těla.",
+      "type": "any"
+    },
+    {
+      "name": "Pyramidová kombinace 1-2 / 1-2-3 / 1-2-3-2",
+      "spokenName": "Rostoucí kombinace direktů a háků",
+      "coop": "celé_kolo",
+      "voiceText": "Nejdřív přední a zadní direkt. Pak přidej přední hák. Nakonec ještě zadní direkt.",
+      "type": "any"
+    },
+    {
+      "name": "Dvojitý hák na tělo a na hlavu (3b-3h)",
+      "spokenName": "Hák na tělo a hák na hlavu",
+      "coop": "v_pulce",
+      "voiceText": "Přední hák na tělo, hned přední hák na hlavu stejnou rukou.",
+      "type": "any"
+    },
+    {
+      "name": "Vstřícný dril: Kontr po úhybu vlevo proti zadnímu direktu",
+      "spokenName": "Kontr po úhybu vlevo na zadní direkt",
+      "coop": "celé_kolo",
+      "voiceText": "Útočník hází pomalý zadní direkt. Obránce udělá úhyb vlevo a vrátí zadní direkt a přední hák. Po kole se prohoďte.",
+      "type": "pair"
+    },
+    {
+      "name": "Vstřícný dril: Kontr po úhybu vpravo proti přednímu direktu",
+      "spokenName": "Kontr po úhybu vpravo na přední direkt",
+      "coop": "celé_kolo",
+      "voiceText": "Útočník hází přední direkt. Obránce udělá úhyb vpravo dovnitř a vrátí zadní direkt na tělo a přední hák na hlavu.",
+      "type": "pair"
+    },
+    {
+      "name": "Vstřícný dril: Úhyb pod hákem a vrácení háku (Roll under hook)",
+      "spokenName": "Úhyb pod hákem a vrácení háku",
+      "coop": "celé_kolo",
+      "voiceText": "Útočník hází přední hák na hlavu. Obránce se podhoupne pod úder a vrátí přední hák na tělo a zadní hák na hlavu.",
+      "type": "pair"
+    },
+    {
+      "name": "Vstřícný dril: Záklon a vrácení zadního direktu (Pull counter)",
+      "spokenName": "Záklon a kontr zadním direktem",
+      "coop": "celé_kolo",
+      "voiceText": "Útočník hází přední direkt. Obránce ukloní hlavu vzad mimo dosah a okamžitě vrátí zadní direkt.",
+      "type": "pair"
+    },
+    {
+      "name": "Vstřícný dril: Záchyt direktu a vrácení vlastního direktu (Catch & return)",
+      "spokenName": "Záchyt direktu a vrácení",
+      "coop": "celé_kolo",
+      "voiceText": "Útočník hází přední direkt. Obránce ho zachytí zadní rukavicí a hned vrátí vlastní přední direkt a zadní direkt.",
+      "type": "pair"
+    },
+    {
+      "name": "Vstřícný dril: Kontr po vykrytí háku (Block & counter hook)",
+      "spokenName": "Vykrytí háku a vrácení háku",
+      "coop": "celé_kolo",
+      "voiceText": "Útočník hází přední hák. Obránce ho vykryje předloktím a vrátí zadní direkt a přední hák.",
+      "type": "pair"
+    },
+    {
+      "name": "Vstřícný dril: Reakce na náhodný úder a kontr (Reaction counter)",
+      "spokenName": "Reakce na náhodný úder a kontr",
+      "coop": "najednou",
+      "voiceText": "Útočník hází jeden náhodný úder za druhým, pomalu. Obránce pokaždé úhybem nebo krytem a vrátí jednu ránu. Pak se prohoďte.",
+      "type": "pair"
+    },
+    {
+      "name": "Vstřícný dril: Útočník vs obránce přes pomyslnou čáru",
+      "spokenName": "Útočník proti obránci v půlce ringu",
+      "coop": "v_pulce",
+      "voiceText": "Jeden tlačí a útočí, druhý jen uhýbá a uhání. V půlce kola si role prohoďte.",
+      "type": "pair"
+    },
+    {
+      "name": "Vstřícný dril: Finta a potrestání reakce (Feint to counter)",
+      "spokenName": "Finta a potrestání reakce",
+      "coop": "celé_kolo",
+      "voiceText": "Jeden naznačuje finty, druhý reaguje obranou. Útočník pak potrestá reakci jedním úderem do vzniklé mezery.",
+      "type": "pair"
+    },
+    {
+      "name": "Vstřícný dril: Kontrolní hák proti náběhu (Check hook counter)",
+      "spokenName": "Kontrolní hák proti náběhu",
+      "coop": "celé_kolo",
+      "voiceText": "Útočník se naženě dopředu. Obránce udělá krok vzad mimo dosah a vrátí přední hák s otočkou.",
+      "type": "pair"
+    },
+    {
+      "name": "Lapy ve dvojici: Útok a vynucený kontr (Mitts counter)",
+      "spokenName": "Lapy s vynuceným kontrem",
+      "coop": "celé_kolo",
+      "voiceText": "Trenér s lapami naznačí úder, boxer uhne a vrátí kombinaci přední direkt, zadní direkt, přední hák.",
+      "type": "pair"
+    },
+    {
+      "name": "Vstřícný dril: Proaktivní zvedák a kříž z úhybu (Slip uppercut cross)",
+      "spokenName": "Úhyb, zvedák a zadní direkt",
+      "coop": "celé_kolo",
+      "voiceText": "Útočník hází zadní direkt. Obránce udělá úhyb dovnitř, zespodu přední zvedák a na konec zadní direkt.",
+      "type": "pair"
+    }
+  ],
+  "bag_work": [
+    {
+      "name": "Kronk Gym: Těžký pytel - Hledání K.O. úderu",
+      "spokenName": "Práce na pytli, tvrdý direkt",
+      "coop": "najednou",
+      "voiceText": "Práce na pytli. Dlouhé údery z dálky, následované tvrdým zadním direktem.",
+      "type": "solo"
+    },
+    {
+      "name": "Cus D'Amato: Tysonův Peek-a-boo dril na pytli s úhyby",
+      "spokenName": "Práce na pytli s úhyby",
+      "coop": "najednou",
+      "voiceText": "Práce na pytli. Po každé kombinaci udělej dva úhyby hlavou.",
+      "type": "solo"
+    },
+    {
+      "name": "Freddie Roach: Rychlostní intervaly (Speed roll)",
+      "spokenName": "Rychlostní intervaly na pytli",
+      "coop": "najednou",
+      "voiceText": "Práce na pytli. Střídání deseti sekund rychlých úderů a dvaceti sekund lehkých úderů.",
+      "type": "solo"
+    },
+    {
+      "name": "Teddy Atlas: Pytel - Útok na spodek a zvedáky zblízka",
+      "spokenName": "Boj zblízka na pytli",
+      "coop": "najednou",
+      "voiceText": "Boj zblízka na pytli. Dvojitý kryt, zvedáky a háky na tělo.",
+      "type": "solo"
+    },
+    {
+      "name": "Angelo Dundee: Pyramida úderů na pytli (1 až 10)",
+      "spokenName": "Pyramida úderů",
+      "coop": "najednou",
+      "voiceText": "Pyramida úderů. Postupně zvyšuj počet úderů od jednoho do deseti a zpět dolů na jeden.",
+      "type": "solo"
+    },
+    {
+      "name": "Cus D'Amato: Willie Bag - nácvik číselných kombinací",
+      "spokenName": "Číselné kombinace na pytli",
+      "coop": "najednou",
+      "voiceText": "Práce na pytli podle číselného systému. Přední hák, zadní direkt, přední zvedák, vždy ruce zpět do krytu.",
+      "type": "solo"
+    },
+    {
+      "name": "Emanuel Steward: Pytel - dlouhý direkt a zkrácení vzdálenosti",
+      "spokenName": "Dlouhý direkt a krok do pytle",
+      "coop": "najednou",
+      "voiceText": "Práce na pytli. Dlouhý přední direkt z dálky, pak krok dovnitř a tvrdý zadní direkt.",
+      "type": "solo"
+    },
+    {
+      "name": "Jack Dempsey: Pytel - padající krok a tvrdý direkt",
+      "spokenName": "Padající krok do pytle",
+      "coop": "najednou",
+      "voiceText": "Práce na pytli s padajícím krokem. Přenes celou váhu těla do předního direktu.",
+      "type": "solo"
+    },
+    {
+      "name": "Floyd Mayweather: Pytel - obrana a okamžitý kontr",
+      "spokenName": "Obrana a kontr na pytli",
+      "coop": "najednou",
+      "voiceText": "Práce na pytli. Po každé kombinaci úhyb nebo rolování ramenem, pak okamžitý kontr.",
+      "type": "solo"
+    },
+    {
+      "name": "Manny Pacquiao: Pytel - série úhlů a úkroků (Angles)",
+      "spokenName": "Úhly a úkroky na pytli",
+      "coop": "najednou",
+      "voiceText": "Práce na pytli. Po kombinaci úkrok do strany, najdi nový úhel a útoč znovu.",
+      "type": "solo"
+    },
+    {
+      "name": "Teddy Atlas: Pytel - tempo na poslední minutu (Finishing burst)",
+      "spokenName": "Závěrečná série na pytli",
+      "coop": "najednou",
+      "voiceText": "Práce na pytli. V poslední části kola naplno rychlé kombinace bez polevení.",
+      "type": "solo"
+    }
+  ],
+  "sparring": [
+    {
+      "name": "Angelo Dundee: Reflexní sparring 'Ali' (Lehce na hlavu)",
+      "spokenName": "Lehký sparring z pohybu",
+      "coop": "najednou",
+      "voiceText": "Uvolněný sparring. Práce z pohybu na špičkách, bez tvrdých úderů.",
+      "type": "pair"
+    },
+    {
+      "name": "Cus D'Amato: Peek-a-boo nácvik tlaku (Infight sparring)",
+      "spokenName": "Sparring v boji zblízka",
+      "coop": "najednou",
+      "voiceText": "Boj zblízka. Jeden tlačí dopředu schovaný v krytu, druhý ho drží na distanc.",
+      "type": "pair"
+    },
+    {
+      "name": "Freddie Roach: Podmíněný sparring na spodek (Body sparring)",
+      "spokenName": "Sparring na tělo",
+      "coop": "najednou",
+      "voiceText": "Sparring pouze na tělo. Kryj si žebra a břicho.",
+      "type": "pair"
+    },
+    {
+      "name": "Kronk Gym: Taktický sparring na přední ruku",
+      "spokenName": "Sparring pouze přední rukou",
+      "coop": "najednou",
+      "voiceText": "Sparring pouze přední rukou. Práce na distanc a přední direkt.",
+      "type": "pair"
+    },
+    {
+      "name": "Teddy Atlas: Bezkontaktní stínový sparring na vzdálenost",
+      "spokenName": "Stínový sparring ve dvojici",
+      "coop": "najednou",
+      "voiceText": "Stínový sparring ve dvojici bez doteku.",
+      "type": "any"
+    },
+    {
+      "name": "Floyd Mayweather: Podmíněný sparring na obranu (Defense only)",
+      "spokenName": "Sparring zaměřený na obranu",
+      "coop": "najednou",
+      "voiceText": "Jeden pouze útočí, druhý se jen brání úhyby, kryty a rolováním ramenem. V půlce kola se prohoďte.",
+      "type": "pair"
+    },
+    {
+      "name": "Emanuel Steward: Sparring na distanc a přední direkt",
+      "spokenName": "Sparring na vzdálenost",
+      "coop": "najednou",
+      "voiceText": "Sparring na dlouhou vzdálenost. Drž distanc předním direktem a nepouštěj soupeře dovnitř.",
+      "type": "pair"
+    },
+    {
+      "name": "Manny Pacquiao: Sparring z úhlů a pohybu (Angles sparring)",
+      "spokenName": "Sparring z pohybu a úhlů",
+      "coop": "najednou",
+      "voiceText": "Sparring s důrazem na pohyb. Po každé kombinaci úkrok do strany a nový úhel.",
+      "type": "pair"
+    },
+    {
+      "name": "Teddy Atlas: Podmíněný sparring jen na kontry (Counter sparring)",
+      "spokenName": "Sparring pouze na kontry",
+      "coop": "najednou",
+      "voiceText": "Sparring pouze na kontry. Neútoč první, čekej na úder soupeře a vracej.",
+      "type": "pair"
+    },
+    {
+      "name": "Cus D'Amato: Sparring s tlakem a úhyby (Pressure & slip)",
+      "spokenName": "Tlakový sparring s úhyby",
+      "coop": "najednou",
+      "voiceText": "Jeden tlačí dopředu schovaný v krytu a uhýbá hlavou, druhý drží distanc údery.",
+      "type": "pair"
+    }
+  ],
+  "conditioning": [
+    {
+      "name": "Cus D'Amato: Tysonovy sklapovačky s údery do stran",
+      "spokenName": "Sklapovačky s údery",
+      "coop": "najednou",
+      "voiceText": "Sklapovačky. Nahoře přidej rotaci a dva údery do vzduchu.",
+      "type": "any"
+    },
+    {
+      "name": "Kronk Gym: Házení těžkým medicimbalem o zem (Slams)",
+      "spokenName": "Házení medicimbalem o zem",
+      "coop": "najednou",
+      "voiceText": "Házení těžkým medicimbalem oběma rukama o zem. Zapoj břicho.",
+      "type": "any"
+    },
+    {
+      "name": "Angelo Dundee: Rychlostní boxerský stín s lehkými činkami",
+      "spokenName": "Stínový box s činkami",
+      "coop": "najednou",
+      "voiceText": "Stínový box s činkami. Rychlé direkty, ruce hned zpátky do krytu.",
+      "type": "any"
+    },
+    {
+      "name": "Freddie Roach: Angličáky s výskokem a boxerským dvojúderem",
+      "spokenName": "Angličáky s údery",
+      "coop": "najednou",
+      "voiceText": "Angličáky s výskokem a údery ve vzduchu při výskoku.",
+      "type": "any"
+    },
+    {
+      "name": "Teddy Atlas: 'The Gladiator Plank' (Plank s klikem)",
+      "spokenName": "Plank střídaný s klikem",
+      "coop": "najednou",
+      "voiceText": "Vzpor na předloktích a střídavé zvedání na dlaně do kliku. Zpevni střed těla.",
+      "type": "any"
+    },
+    {
+      "name": "Mike Tyson: Dřepy s výskokem (Explozivní nohy)",
+      "spokenName": "Výskoky z dřepu",
+      "coop": "najednou",
+      "voiceText": "Dřep a výbušný výskok. Měkké dopady, zapoj nohy pro výbušnost úderů.",
+      "type": "any"
+    },
+    {
+      "name": "Cus D'Amato: Krční můstky pro zpevnění šíje (Neck bridges)",
+      "spokenName": "Posilování krku",
+      "coop": "najednou",
+      "voiceText": "Pomalé pohyby hlavou pro zpevnění krku. Pohybuj se kontrolovaně, nikam nespěchej.",
+      "type": "any"
+    },
+    {
+      "name": "Kronk Gym: Sprinty na místě s vysokými koleny (Intervaly)",
+      "spokenName": "Sprint na místě s koleny",
+      "coop": "najednou",
+      "voiceText": "Sprint na místě s vysokými koleny. Deset sekund naplno, deset sekund lehce.",
+      "type": "any"
+    },
+    {
+      "name": "Freddie Roach: Výpady střídané s údery (Lunges & punch)",
+      "spokenName": "Výpady s údery",
+      "coop": "najednou",
+      "voiceText": "Výpad vpřed a dva údery do vzduchu nahoře. Střídej nohy.",
+      "type": "any"
+    },
+    {
+      "name": "Teddy Atlas: Výdrž v postoji (Stance hold isometric)",
+      "spokenName": "Statická výdrž v postoji",
+      "coop": "najednou",
+      "voiceText": "Drž nízký boxerský postoj bez pohybu. Zpevni nohy a střed těla, dýchej.",
+      "type": "any"
+    },
+    {
+      "name": "Mike Tyson: Kliky se zvednutím dlaní (Plyo push-ups)",
+      "spokenName": "Výbušné kliky",
+      "coop": "najednou",
+      "voiceText": "Výbušné kliky s odlepením dlaní od země. Měkký dopad, zpevni střed těla.",
+      "type": "any"
+    },
+    {
+      "name": "Mike Tyson: Série kliků (Old-school push-ups)",
+      "spokenName": "Kliky",
+      "coop": "najednou",
+      "voiceText": "Kliky. Rovná záda, lokty u těla. Pracuj v sériích, krátký odpočinek.",
+      "type": "any"
+    },
+    {
+      "name": "Mike Tyson: Sklapovačky a sedy-lehy (High-rep sit-ups)",
+      "spokenName": "Sedy-lehy",
+      "coop": "najednou",
+      "voiceText": "Sedy-lehy. Nahoru výbušně, dolů pomalu a kontrolovaně. Zpevni břicho.",
+      "type": "any"
+    },
+    {
+      "name": "Old-school: Výdrž v boxerském dřepu (Boxing squat hold)",
+      "spokenName": "Dřepy v boxerském postoji",
+      "coop": "najednou",
+      "voiceText": "Dřepy s krytem u tváří, brada dole, záda rovná. Drž boxerský postoj.",
+      "type": "any"
+    },
+    {
+      "name": "Mike Tyson: Krční můstky (Neck bridges)",
+      "spokenName": "Krční můstky",
+      "coop": "najednou",
+      "voiceText": "Pomalé krční můstky pro zpevnění šíje. Velmi opatrně a kontrolovaně, ať uneseš tvrdý úder.",
+      "type": "any"
+    },
+    {
+      "name": "Old-school: Tricepsové kliky na lavičce (Dips)",
+      "spokenName": "Tricepsové kliky",
+      "coop": "najednou",
+      "voiceText": "Tricepsové kliky o lavičku nebo židli. Spouštěj se kontrolovaně, vytlač nahoru.",
+      "type": "any"
+    },
+    {
+      "name": "Ruské rotace s rotací trupu (Russian twists)",
+      "spokenName": "Ruské rotace",
+      "coop": "najednou",
+      "voiceText": "V sedu se zakloněným trupem rotuj ze strany na stranu. Zapoj šikmé břišní svaly pro silnější háky.",
+      "type": "any"
+    },
+    {
+      "name": "Výdrž v prkně se zvedáním kolen (Plank)",
+      "spokenName": "Prkno",
+      "coop": "najednou",
+      "voiceText": "Vzpor na předloktích, zpevni střed těla. Drž rovná záda a klidně dýchej.",
+      "type": "any"
+    },
+    {
+      "name": "Direktový odhoz medicimbalu (Med-ball punch throw)",
+      "spokenName": "Direktový odhoz medicimbalu",
+      "coop": "najednou",
+      "voiceText": "Postav se bokem ke stěně, míč u hrudi. Výbušně odhoď míč vpřed jako přední direkt, síla jde od nohou. Vystřídej strany.",
+      "type": "any"
+    },
+    {
+      "name": "Rotační odhoz medicimbalu o stěnu (Rotational hook throw)",
+      "spokenName": "Rotační odhoz medicimbalu",
+      "coop": "najednou",
+      "voiceText": "Stůj bokem ke stěně, míč u boku. Výbušně rotuj trupem a hoď míč o stěnu jako hák. Chyť odraz a opakuj.",
+      "type": "any"
+    },
+    {
+      "name": "Odhoz medicimbalu z výpadu (Squat-to-throw)",
+      "spokenName": "Odhoz medicimbalu z dřepu",
+      "coop": "najednou",
+      "voiceText": "Dřep s míčem, pak výbušně vstaň a odhoď míč vpřed jako přímý úder. Síla od nohou nahoru.",
+      "type": "any"
+    },
+    {
+      "name": "Odhoz medicimbalu nad hlavou s rotací (Overhead slam twist)",
+      "spokenName": "Odhoz medicimbalu nad hlavou",
+      "coop": "najednou",
+      "voiceText": "Zvedni míč nad hlavu a s rotací trupu ho praštěni o zem vedle nohy jako přehazovaný úder. Vystřídej strany.",
+      "type": "any"
+    },
+    {
+      "name": "Odhozy medicimbalu ve dvojici (Partner chest pass)",
+      "spokenName": "Přihrávky medicimbalem ve dvojici",
+      "coop": "najednou",
+      "voiceText": "Ve dvojici proti sobě. Výbušně si přihrávejte těžký míč od hrudi jako přímý úder. Zapoj nohy a hrudník.",
+      "type": "pair"
+    },
+    {
+      "name": "Angličáky s odhozem medicimbalu (Burpee slam)",
+      "spokenName": "Angličáky s odhozem medicimbalu",
+      "coop": "najednou",
+      "voiceText": "Angličák a po výskoku praštěni míč o zem. Spoj kondici s výbušností, dýchej s každým úderem.",
+      "type": "any"
+    },
+    {
+      "name": "Závěrečné protažení a uvolnění (Cool-down stretch)",
+      "spokenName": "Závěrečné protažení",
+      "coop": "najednou",
+      "voiceText": "Pomalé statické protažení ramen, zad a nohou. Zklidni dech a uvolni svaly po tréninku.",
+      "type": "any"
+    }
+  ]
+}

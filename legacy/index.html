@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BRUTAL BOXING TIMER & DRILL GENERATOR</title>
+    <!-- Google Fonts: Teko (pro brutální sportovní číslice a nadpisy) a Barlow (čitelné moderní texty) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,600;0,800;1,400&family=Teko:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Pozadí se stíny a mřížkou (řešeno v CSS) -->
+        <header class="app-header">
+            <div class="logo">
+                <span class="logo-red">BRUTAL</span><span class="logo-white">BOX</span>
+                <span class="logo-sub">TRAINING SYSTEM</span>
+            </div>
+            <nav class="app-nav">
+                <button class="nav-btn active" id="btn-tab-workout" onclick="switchTab('workout')">TRÉNINK</button>
+                <button class="nav-btn" id="btn-tab-editor" onclick="switchTab('editor')">EDITOR DRILLŮ</button>
+            </nav>
+        </header>
+
+        <main class="app-main">
+            <!-- SECTION 1: WORKOUT & CONFIGURATION -->
+            <section id="tab-workout" class="tab-content active">
+                <div class="workout-grid">
+                    <!-- LEVÝ PANEL: Nastavení a generátor (Zobrazuje se před startem) -->
+                    <div id="setup-panel" class="card config-card">
+                        <h2 class="card-title"><span class="accent-line"></span>NASTAVENÍ TRÉNINKU</h2>
+                        
+                        <div class="control-group">
+                            <label class="control-label">POČET ÚČASTNÍKŮ (1 - 6)</label>
+                            <div class="participants-selector">
+                                <button type="button" class="btn-selector active" data-val="1">1</button>
+                                <button type="button" class="btn-selector" data-val="2">2</button>
+                                <button type="button" class="btn-selector" data-val="3">3</button>
+                                <button type="button" class="btn-selector" data-val="4">4</button>
+                                <button type="button" class="btn-selector" data-val="5">5</button>
+                                <button type="button" class="btn-selector" data-val="6">6</button>
+                            </div>
+                            <span class="selector-help" id="participants-help">Solo trénink (stínový box, pytel, individuální kondice).</span>
+                        </div>
+
+                        <div class="control-group">
+                            <label class="control-label" for="input-duration">
+                                CELKOVÁ DÉLKA TRÉNINKU: <span id="val-duration" class="highlight-val">40</span> minut
+                            </label>
+                            <input type="range" id="input-duration" min="10" max="90" step="5" value="40" class="slider">
+                            <div class="slider-ticks">
+                                <span>10m</span>
+                                <span>25m</span>
+                                <span>40m</span>
+                                <span>60m</span>
+                                <span>90m</span>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label class="control-label" for="input-rest-duration">
+                                DÉLKA ODPOČINKU: <span id="val-rest-duration" class="highlight-val">20</span> sekund
+                            </label>
+                            <input type="range" id="input-rest-duration" min="10" max="45" step="5" value="20" class="slider">
+                            <div class="slider-ticks">
+                                <span>10s</span>
+                                <span>15s</span>
+                                <span>20s</span>
+                                <span>30s</span>
+                                <span>45s</span>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label class="control-label">FÁZE TRÉNINKU</label>
+                            <div class="checkbox-grid">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="chk-warmup" checked>
+                                    <span class="checkmark"></span>
+                                    Warm-up (Rozcvička)
+                                </label>
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="chk-combinations" checked>
+                                    <span class="checkmark"></span>
+                                    Nácvik kombinací
+                                </label>
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="chk-bag" checked>
+                                    <span class="checkmark"></span>
+                                    Práce na pytli
+                                </label>
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="chk-sparring" checked>
+                                    <span class="checkmark"></span>
+                                    Sparring (5-10 min)
+                                </label>
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="chk-conditioning" checked>
+                                    <span class="checkmark"></span>
+                                    Kondiční kruháč
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <label class="control-label">HLAS A ZVUKY</label>
+                            <div class="audio-controls">
+                                <label class="checkbox-container">
+                                    <input type="checkbox" id="chk-tts" checked>
+                                    <span class="checkmark"></span>
+                                    Hlasové čtení kombinací (Česky)
+                                </label>
+                                <div class="voice-params">
+                                    <div class="voice-param">
+                                        <label for="select-voice">Výběr hlasu</label>
+                                        <select id="select-voice">
+                                            <option value="default">Výchozí český hlas</option>
+                                        </select>
+                                    </div>
+                                    <div class="voice-param">
+                                        <label for="slider-volume">Hlasitost</label>
+                                        <input type="range" id="slider-volume" min="0" max="1" step="0.1" value="0.8">
+                                    </div>
+                                    <div class="voice-param">
+                                        <label for="slider-rate">Rychlost řeči: <span id="val-rate">0.8</span>x</label>
+                                        <input type="range" id="slider-rate" min="0.5" max="1.5" step="0.05" value="0.8">
+                                    </div>
+                                    <div class="voice-param">
+                                        <label for="slider-pitch">Výška hlasu: <span id="val-pitch">1.0</span></label>
+                                        <input type="range" id="slider-pitch" min="0.5" max="1.5" step="0.05" value="1.0">
+                                    </div>
+                                </div>
+                                <div class="voice-tip" style="font-size: 0.8rem; color: var(--color-text-muted); margin-top: 0.75rem; line-height: 1.4; border-top: 1px dashed rgba(255,255,255,0.05); padding-top: 0.75rem;">
+                                    💡 <strong>Tip pro super-realistický hlas:</strong> Otevřete tuto stránku v prohlížeči <strong>Microsoft Edge</strong> a zvolte v seznamu online hlas (např. <em>Vlasta Online</em> nebo <em>Antonin Online</em>). Znějí naprosto přirozeně a lidsky!
+                                </div>
+                            </div>
+                        </div>
+
+                        <button id="btn-generate" class="btn btn-primary btn-large">
+                            <svg class="btn-icon" viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg>
+                            VYGENEROVAT A NACHYSTAT TRÉNINK
+                        </button>
+                    </div>
+
+                    <!-- LEVÝ PANEL: Běžící trénink s časovačem (Skryto do startu) -->
+                    <div id="timer-panel" class="card timer-card hidden">
+                        <div class="timer-header">
+                            <span class="phase-tag" id="timer-phase">Warming Up</span>
+                            <div class="round-indicator">KOLO <span id="current-round">1</span> / <span id="total-rounds">10</span></div>
+                        </div>
+                        
+                        <div class="timer-display-wrapper">
+                            <!-- Velký digitální časovač -->
+                            <div class="timer-display" id="timer-time">03:00</div>
+                            <div class="timer-bar-bg">
+                                <div class="timer-bar-fill" id="timer-progress" style="width: 100%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="exercise-info">
+                            <h3 class="exercise-title" id="exercise-name">Skákání přes švihadlo</h3>
+                            <p class="exercise-desc" id="exercise-desc">Svižné tempo na zahřátí celého těla.</p>
+                        </div>
+
+                        <div id="timer-roles" class="timer-roles-box hidden"></div>
+
+                        <div class="next-up-info">
+                            <span class="next-tag">NÁSLEDUJE:</span>
+                            <span class="next-name" id="next-exercise-name">Pauza (Vydýchání)</span>
+                        </div>
+
+                        <div class="timer-controls">
+                            <button id="btn-play-pause" class="btn btn-success btn-circle">
+                                <svg class="play-icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                <svg class="pause-icon hidden" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                            </button>
+                            <button id="btn-repeat" class="btn btn-warning btn-circle" title="Zopakovat instrukce">
+                                <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+                            </button>
+                            <button id="btn-skip" class="btn btn-secondary btn-circle" title="Přeskočit fázi">
+                                <svg viewBox="0 0 24 24"><path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/></svg>
+                            </button>
+                            <button id="btn-reset" class="btn btn-danger btn-circle" title="Zastavit a resetovat">
+                                <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+                            </button>
+                        </div>
+                        <div class="timer-voice-toggle">
+                            <button id="btn-mute-speech" class="btn-text">
+                                <span class="icon-speaker">🔊</span> Hlas je zapnutý (kliknutím ztišíte)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- PRAVÝ PANEL: Přehled kol a fází (Timeline) -->
+                    <div class="card timeline-card">
+                        <h2 class="card-title"><span class="accent-line"></span>HARMONOGRAM TRÉNINKU</h2>
+                        
+                        <div class="timeline-summary">
+                            <div class="sum-item">
+                                <span class="sum-label">Celkový čas</span>
+                                <span class="sum-val" id="summary-total-time">40 min</span>
+                            </div>
+                            <div class="sum-item">
+                                <span class="sum-label">Aktivní práce</span>
+                                <span class="sum-val" id="summary-work-time">30 min</span>
+                            </div>
+                            <div class="sum-item">
+                                <span class="sum-label">Pauzy</span>
+                                <span class="sum-val" id="summary-rest-time">10 min</span>
+                            </div>
+                        </div>
+
+                        <!-- Odkaz/seznam vygenerovaných kol -->
+                        <div class="timeline-list" id="timeline-list">
+                            <div class="timeline-placeholder">
+                                Nastavte parametry a klikněte na tlačítko výše pro vygenerování rozpisu tréninku.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 2: DRILL EDITOR -->
+            <section id="tab-editor" class="tab-content">
+                <div class="editor-grid">
+                    <!-- LEVÝ PANEL: Formulář pro přidání cvičení -->
+                    <div class="card editor-form-card">
+                        <h2 class="card-title"><span class="accent-line"></span>PŘIDAT / UPRAVIT CVIČENÍ</h2>
+                        <form id="drill-form" onsubmit="saveDrill(event)">
+                            <input type="hidden" id="edit-drill-id">
+                            <input type="hidden" id="edit-drill-category">
+
+                            <div class="form-group">
+                                <label for="drill-category">Kategorie cvičení</label>
+                                <select id="drill-category" required>
+                                    <option value="warmup">Warm-up (Rozcvička)</option>
+                                    <option value="combinations">Kombinace a úhyby</option>
+                                    <option value="bag_work">Práce na pytli</option>
+                                    <option value="sparring">Sparring</option>
+                                    <option value="conditioning">Kondice / Posilování</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="drill-name">Název cvičení (Zobrazí se na displeji)</label>
+                                <input type="text" id="drill-name" placeholder="Např. Jab - Cross - Úhyb pod levým hákem" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="drill-spoken-name">Hlasový název (Zjednodušené ohlášení na začátku kola / v pauze, např. Úhyb a přední hák)</label>
+                                <input type="text" id="drill-spoken-name" placeholder="Ponechte prázdné pro automatické odvození z textu">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="drill-voice">Hlasový text (Co přečte hlasový syntetizátor)</label>
+                                <input type="text" id="drill-voice" placeholder="Např. přední, zadní, podlézt levý hák" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="drill-type">Určeno pro počet lidí</label>
+                                <select id="drill-type" required>
+                                    <option value="any">Kdekoliv (sólo i dvojice) / Všechny počty</option>
+                                    <option value="solo">Pouze sólo (1 osoba, nebo bez partnera)</option>
+                                    <option value="pair">Pouze ve dvojicích (sudý počet, nebo párová práce)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="drill-coop">Způsob spolupráce (Pro 2 a více lidí)</label>
+                                <select id="drill-coop" required>
+                                    <option value="najednou">Najednou (Cvičí všichni společně)</option>
+                                    <option value="stridave">Na střídačku (Střídání útoku a krytu uvnitř kola)</option>
+                                    <option value="v_pulce">V půlce vyměnit (V půlce kola zazní zvon a vymění se role)</option>
+                                    <option value="celé_kolo">Celé kolo (Jeden cvičí, druhý kryje, výměna další kolo)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-success" id="btn-save-drill">Uložit cvičení</button>
+                                <button type="button" class="btn btn-secondary" onclick="resetDrillForm()">Zrušit</button>
+                            </div>
+                        </form>
+
+                        <div class="json-actions">
+                            <h3>Správa datového souboru (`drills.json`)</h3>
+                            <p class="help-text">Po dokončení úprav si stáhněte nový soubor a nahrajte jej na FTP do složky s aplikací.</p>
+                            <div class="json-buttons">
+                                <button class="btn btn-primary" onclick="downloadJSON()">
+                                    📥 Stáhnout drills.json
+                                </button>
+                                <label class="btn btn-secondary btn-file">
+                                    📤 Nahrát stávající drills.json
+                                    <input type="file" id="file-upload" accept=".json" onchange="uploadJSON(event)" style="display: none;">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PRAVÝ PANEL: Seznam cvičení v databázi -->
+                    <div class="card editor-list-card">
+                        <div class="editor-list-header">
+                            <h2 class="card-title"><span class="accent-line"></span>DATABÁZE CVIČENÍ</h2>
+                            <div class="category-filter">
+                                <select id="filter-category" onchange="renderEditorList()">
+                                    <option value="all">Všechny kategorie</option>
+                                    <option value="warmup">Warm-up (Rozcvička)</option>
+                                    <option value="combinations">Kombinace a úhyby</option>
+                                    <option value="bag_work">Práce na pytli</option>
+                                    <option value="sparring">Sparring</option>
+                                    <option value="conditioning">Kondice</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Hromadný import -->
+                        <div class="bulk-import-section">
+                            <details>
+                                <summary>⚡ Hromadný import kombinací/cvičení (text)</summary>
+                                <div class="bulk-import-container">
+                                    <p class="help-text">Zadejte cvičení na samostatné řádky. Každý řádek zparsujeme jako nové cvičení. Formát: `Název cvičení | Hlasový text` (Hlasový text je nepovinný).</p>
+                                    <select id="bulk-category">
+                                        <option value="combinations">Kombinace a úhyby</option>
+                                        <option value="warmup">Warm-up</option>
+                                        <option value="bag_work">Práce na pytli</option>
+                                        <option value="sparring">Sparring</option>
+                                        <option value="conditioning">Kondice</option>
+                                    </select>
+                                    <textarea id="bulk-text" placeholder="Levá pravá kachna | přední, zadní, úhyb vlevo&#10;Hák zvedák | přední hák, zadní zvedák" rows="4"></textarea>
+                                    <button type="button" class="btn btn-primary btn-small" onclick="handleBulkImport()">Importovat řádky</button>
+                                </div>
+                            </details>
+                        </div>
+
+                        <div class="drill-table-container">
+                            <table class="drill-table">
+                                <thead>
+                                    <tr>
+                                        <th>Název cvičení</th>
+                                        <th>Hlasový text</th>
+                                        <th>Typ</th>
+                                        <th>Akce</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="editor-drill-rows">
+                                    <!-- Generováno JavaScriptem -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="app-footer">
+            <p>&copy; 2026 BRUTAL BOX TIMER | Vyvinuto pro efektivní trénink</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
