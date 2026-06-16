@@ -1,0 +1,7 @@
+# Node 22 (Next 16 a Prisma 7 vyžadují >=20) + npm install místo npm ci
+# (npm ci padá na cross-platform optional balíčcích @emnapi z Windows lockfile).
+[phases.setup]
+nixPkgs = ["nodejs_22", "openssl"]
+
+[phases.install]
+cmds = ["npm install --no-audit --no-fund"]
