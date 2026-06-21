@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MyCoach",
-  description: "Tvůj osobní trénink – evidence, plány a sporty na jednom místě.",
+  title: { default: "MyCoach", template: "%s · MyCoach" },
+  description: "Osobní trénink, váha a kondice na jednom místě.",
 };
 
 export default function RootLayout({

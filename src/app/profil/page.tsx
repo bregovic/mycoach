@@ -6,6 +6,9 @@ import { ProfileForm, type ProfileValues } from "@/components/profile-form";
 import { WeightForm } from "@/components/weight-form";
 import { WeightChart, type WeightPoint } from "@/components/weight-chart";
 import { calcAge, calcBmi, bmiCategory, type BmiTone } from "@/lib/health";
+import { Brand } from "@/components/brand";
+
+export const metadata = { title: "Profil" };
 
 const toneClasses: Record<BmiTone, string> = {
   blue: "bg-blue-50 text-blue-700",
@@ -82,18 +85,17 @@ export default async function ProfilePage() {
 
   return (
     <main className="min-h-dvh bg-zinc-50">
-      <header className="flex items-center justify-between border-b border-zinc-200 bg-white px-6 py-4">
-        <Link href="/dashboard" className="text-lg font-semibold tracking-tight text-zinc-900">
-          MyCoach
+      <header className="flex items-center justify-between border-b border-zinc-200 bg-white/80 px-6 py-4 backdrop-blur">
+        <Link href="/dashboard">
+          <Brand />
         </Link>
-        <Link href="/dashboard" className="text-sm text-zinc-500 hover:text-zinc-900">
-          ← Zpět na přehled
+        <Link href="/dashboard" className="text-sm text-zinc-500 transition hover:text-zinc-900">
+          ← Přehled
         </Link>
       </header>
 
-      <section className="mx-auto max-w-3xl px-6 py-10">
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Profil</h1>
-        <p className="mt-2 text-zinc-600">Tvůj aktuální přehled a osobní údaje.</p>
+      <section className="mx-auto max-w-3xl px-6 py-12">
+        <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">Profil</h1>
 
         {/* Přehled */}
         <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -115,7 +117,7 @@ export default async function ProfilePage() {
         )}
 
         {/* Graf vývoje váhy */}
-        <div className="mt-8 rounded-xl border border-zinc-200 bg-white p-6">
+        <div className="mt-8 rounded-2xl border border-zinc-200 bg-white p-6">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-base font-semibold text-zinc-900">Vývoj váhy</h2>
             {showBodyFat && (
@@ -139,18 +141,14 @@ export default async function ProfilePage() {
         </div>
 
         {/* Zápis váhy */}
-        <div className="mt-6 rounded-xl border border-zinc-200 bg-white p-6">
-          <h2 className="text-base font-semibold text-zinc-900">Zapsat váhu</h2>
-          <p className="mt-1 mb-4 text-sm text-zinc-500">
-            Každý záznam se ukládá do historie — později z ní bude graf.
-          </p>
+        <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6">
+          <h2 className="mb-4 text-base font-semibold text-zinc-900">Zapsat váhu</h2>
           <WeightForm />
         </div>
 
         {/* Údaje profilu */}
-        <div className="mt-6 rounded-xl border border-zinc-200 bg-white p-6">
-          <h2 className="text-base font-semibold text-zinc-900">Údaje profilu</h2>
-          <p className="mt-1 mb-4 text-sm text-zinc-500">Slouží k výpočtům a personalizaci. Vše je nepovinné.</p>
+        <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6">
+          <h2 className="mb-4 text-base font-semibold text-zinc-900">Údaje profilu</h2>
           <ProfileForm values={values} />
         </div>
       </section>

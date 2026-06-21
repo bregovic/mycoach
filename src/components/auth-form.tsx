@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import type { FormState } from "@/lib/actions/auth";
+import { Brand } from "@/components/brand";
 
 type Action = (prev: FormState, formData: FormData) => Promise<FormState>;
 
@@ -12,12 +13,10 @@ export function AuthForm({ mode, action }: { mode: "login" | "register"; action:
 
   return (
     <div className="mx-auto w-full max-w-sm">
+      <Brand className="mb-8" />
       <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">
         {isRegister ? "Vytvořit účet" : "Přihlášení"}
       </h1>
-      <p className="mt-1 text-sm text-zinc-500">
-        {isRegister ? "Začni sledovat svůj trénink." : "Vítej zpět v MyCoach."}
-      </p>
 
       <form action={formAction} className="mt-6 space-y-4">
         {isRegister && (
