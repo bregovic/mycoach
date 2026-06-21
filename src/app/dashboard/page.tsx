@@ -12,7 +12,9 @@ export default async function DashboardPage() {
       <header className="flex items-center justify-between border-b border-zinc-200 bg-white px-6 py-4">
         <span className="text-lg font-semibold tracking-tight text-zinc-900">MyCoach</span>
         <div className="flex items-center gap-4">
-          <span className="text-sm text-zinc-500">{session.user.name ?? session.user.email}</span>
+          <Link href="/profil" className="text-sm text-zinc-500 hover:text-zinc-900">
+            {session.user.name ?? session.user.email}
+          </Link>
           <form action={logoutAction}>
             <button type="submit" className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 hover:bg-zinc-100">
               Odhlásit
@@ -39,6 +41,16 @@ export default async function DashboardPage() {
             <p className="mt-1 text-sm text-zinc-300">Hlasově řízený intervalový trénink (Box)</p>
             <p className="mt-3 text-xs font-medium uppercase tracking-wide text-zinc-400 group-hover:text-zinc-200">
               Spustit
+            </p>
+          </Link>
+          <Link
+            href="/profil"
+            className="group rounded-xl border border-zinc-200 bg-white p-5 transition hover:border-zinc-400"
+          >
+            <h2 className="font-medium text-zinc-900">Profil</h2>
+            <p className="mt-1 text-sm text-zinc-500">Výška, cíl a jednotky</p>
+            <p className="mt-3 text-xs font-medium uppercase tracking-wide text-zinc-400 group-hover:text-zinc-600">
+              Upravit
             </p>
           </Link>
           {[

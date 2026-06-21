@@ -122,7 +122,7 @@ Engine je **sport-agnostický** — box je jen první „disciplína" (dataset).
 2. ✅ Hlasový trénink (`/trening`).
 3. ⏭ **Uložit odcvičený trénink** do `WorkoutLog` (po dokončení / ručně) → základ historie.
 4. ⏭ **Tracker váhy** (`BodyMetric`): zápis + **graf** (Recharts) na dashboardu.
-5. ⏭ **Profil** uživatele (cíl, výška, jednotky).
+5. ✅ **Profil** uživatele (`/profil`): výška, rok narození, pohlaví, cíl, jednotky (upsert do `Profile`).
 
 **Fáze 2 — obsah a sporty:**
 6. ⏭ Přesun cviků z JSON do DB (`Sport` + `Exercise`); **více sportů** (datově řízené disciplíny).
