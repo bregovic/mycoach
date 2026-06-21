@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { ProfileForm, type ProfileValues } from "@/components/profile-form";
 import { WeightForm } from "@/components/weight-form";
+import { WeightChart, type WeightPoint } from "@/components/weight-chart";
 import { calcAge, calcBmi, bmiCategory, type BmiTone } from "@/lib/health";
 
 const toneClasses: Record<BmiTone, string> = {
@@ -41,13 +42,25 @@ export default async function ProfilePage() {
   if (!session?.user?.id) redirect("/login");
   const userId = session.user.id;
 
-  const [profile, latest] = await Promise.all([
+  const [profile, metrics] = await Promise.all([
     prisma.profile.findUnique({ where: { userId } }),
-    prisma.bodyMetric.findFirst({
+    prisma.bodyMetric.findMany({
       where: { userId },
-      orderBy: { date: "desc" },
+      orderBy: { date: "asc" },
+      select: { date: true, weightKg: true, bodyFat: true },
     }),
   ]);
+  const latest = metrics.at(-1) ?? null;
+
+  const dayMonth = new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "numeric" });
+  const chartData: WeightPoint[] = metrics
+    .filter((m) => m.weightKg != null)
+    .map((m) => ({
+      label: dayMonth.format(m.date),
+      weightKg: Number(m.weightKg),
+      bodyFat: m.bodyFat != null ? Number(m.bodyFat) : null,
+    }));
+  const showBodyFat = chartData.some((d) => d.bodyFat != null);
 
   const values: ProfileValues = {
     heightCm: profile?.heightCm ?? null,
@@ -101,8 +114,32 @@ export default async function ProfilePage() {
           </p>
         )}
 
-        {/* Zápis váhy */}
+        {/* Graf vývoje váhy */}
         <div className="mt-8 rounded-xl border border-zinc-200 bg-white p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-zinc-900">Vývoj váhy</h2>
+            {showBodyFat && (
+              <div className="flex items-center gap-4 text-xs text-zinc-500">
+                <span className="flex items-center gap-1.5">
+                  <span className="inline-block h-2 w-2 rounded-full bg-zinc-900" /> váha
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="inline-block h-2 w-2 rounded-full bg-amber-500" /> % tuku
+                </span>
+              </div>
+            )}
+          </div>
+          {chartData.length >= 2 ? (
+            <WeightChart data={chartData} showBodyFat={showBodyFat} />
+          ) : (
+            <p className="py-8 text-center text-sm text-zinc-400">
+              Zapiš aspoň dva záznamy váhy a uvidíš tu graf vývoje.
+            </p>
+          )}
+        </div>
+
+        {/* Zápis váhy */}
+        <div className="mt-6 rounded-xl border border-zinc-200 bg-white p-6">
           <h2 className="text-base font-semibold text-zinc-900">Zapsat váhu</h2>
           <p className="mt-1 mb-4 text-sm text-zinc-500">
             Každý záznam se ukládá do historie — později z ní bude graf.

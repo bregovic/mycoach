@@ -121,7 +121,7 @@ Engine je **sport-agnostický** — box je jen první „disciplína" (dataset).
 1. ✅ Kostra + přihlášení + DB.
 2. ✅ Hlasový trénink (`/trening`).
 3. ⏭ **Uložit odcvičený trénink** do `WorkoutLog` (po dokončení / ručně) → základ historie.
-4. 🔶 **Tracker váhy** (`BodyMetric`): ✅ zápis váhy/% tuku (na `/profil`); ⏭ **graf** (Recharts) zbývá.
+4. ✅ **Tracker váhy** (`BodyMetric`): zápis váhy/% tuku + **graf vývoje** (Recharts) na `/profil`.
 5. ✅ **Profil** uživatele (`/profil`): výška, rok narození, pohlaví, cíl, jednotky (upsert do `Profile`)
    + přehledové dlaždice (aktuální váha, výška, věk, **BMI** vč. kategorie — `src/lib/health.ts`).
 
