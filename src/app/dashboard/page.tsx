@@ -31,7 +31,7 @@ export default async function DashboardPage() {
           Ahoj{session.user.name ? `, ${session.user.name}` : ""} 👋
         </h1>
 
-        <div className="mt-10 grid gap-4 sm:grid-cols-3">
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Link
             href="/trening"
             className="group flex flex-col rounded-2xl bg-zinc-900 p-6 text-white transition hover:bg-zinc-800"
@@ -40,6 +40,17 @@ export default async function DashboardPage() {
             <p className="mt-1 text-sm text-zinc-300">Hlasově řízený intervalový trénink</p>
             <span className="mt-6 text-sm font-medium text-zinc-400 transition group-hover:text-white">
               Spustit →
+            </span>
+          </Link>
+
+          <Link
+            href="/kalendar"
+            className="group flex flex-col rounded-2xl border border-zinc-200 bg-white p-6 transition hover:border-zinc-300 hover:shadow-sm"
+          >
+            <h2 className="text-lg font-medium text-zinc-900">Kalendář</h2>
+            <p className="mt-1 text-sm text-zinc-500">Plánuj tréninky a úkoly</p>
+            <span className="mt-6 text-sm font-medium text-zinc-400 transition group-hover:text-zinc-700">
+              Otevřít →
             </span>
           </Link>
 

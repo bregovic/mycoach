@@ -95,7 +95,15 @@ export default async function ProfilePage() {
       </header>
 
       <section className="mx-auto max-w-3xl px-6 py-12">
-        <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">Profil</h1>
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">Profil</h1>
+          <Link
+            href="/kalendar"
+            className="shrink-0 rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100"
+          >
+            Kalendář →
+          </Link>
+        </div>
 
         {/* Přehled */}
         <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">

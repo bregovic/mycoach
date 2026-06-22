@@ -120,10 +120,15 @@ Engine je **sport-agnostický** — box je jen první „disciplína" (dataset).
 **Fáze 1 — osobní hodnota (teď):**
 1. ✅ Kostra + přihlášení + DB.
 2. ✅ Hlasový trénink (`/trening`).
-3. ⏭ **Uložit odcvičený trénink** do `WorkoutLog` (po dokončení / ručně) → základ historie.
+3. 🔶 **Uložit odcvičený trénink** do `WorkoutLog`: ✅ splnění úkolu v kalendáři založí `WorkoutLog`;
+   ⏭ uložení přímo po dokončení `/trening`.
 4. ✅ **Tracker váhy** (`BodyMetric`): zápis váhy/% tuku + **graf vývoje** (Recharts) na `/profil`.
 5. ✅ **Profil** uživatele (`/profil`): výška, rok narození, pohlaví, cíl, jednotky (upsert do `Profile`)
    + přehledové dlaždice (aktuální váha, výška, věk, **BMI** vč. kategorie — `src/lib/health.ts`).
+6. ✅ **Tréninkový kalendář** (`/kalendar`): aktivity (presety + vlastní, barvy), ruční úkoly na den
+   i **opakovaný rozvrh** (dny v týdnu → auto-generování úkolů), splnění úkolu → `WorkoutLog`.
+   Modely `Activity`/`ActivitySchedule`/`ScheduledTask`; logika `src/lib/calendar*.ts`,
+   akce `src/lib/actions/calendar.ts`, UI `src/components/calendar/`.
 
 **Fáze 2 — obsah a sporty:**
 6. ⏭ Přesun cviků z JSON do DB (`Sport` + `Exercise`); **více sportů** (datově řízené disciplíny).

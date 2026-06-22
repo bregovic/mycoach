@@ -29,13 +29,16 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts    Account[]
-  sessions    Session[]
-  profile     Profile?
-  bodyMetrics BodyMetric[]
-  workoutLogs WorkoutLog[]
-  plansOwned  Plan[]       @relation("PlanTrainer")
-  enrollments Enrollment[]
+  accounts          Account[]
+  sessions          Session[]
+  profile           Profile?
+  bodyMetrics       BodyMetric[]
+  workoutLogs       WorkoutLog[]
+  plansOwned        Plan[]             @relation("PlanTrainer")
+  enrollments       Enrollment[]
+  activities        Activity[]
+  activitySchedules ActivitySchedule[]
+  scheduledTasks    ScheduledTask[]
 }
 
 model Account {
@@ -196,7 +199,69 @@ model WorkoutLog {
   data        Json?
   createdAt   DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scheduledTask ScheduledTask?
 
   @@index([userId, date])
+}
+
+// ---------------------------------------------------------------------------
+// Tréninkový kalendář: aktivity, opakovaný rozvrh, naplánované úkoly
+// ---------------------------------------------------------------------------
+
+model Activity {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  color     String   @default("#18181b") // hex barva pro odlišení v kalendáři
+  sportSlug String? // pokud vznikla z předpřipraveného sportu (budoucí napojení)
+  createdAt DateTime @default(now())
+
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tasks     ScheduledTask[]
+  schedules ActivitySchedule[]
+
+  @@index([userId])
+}
+
+model ActivitySchedule {
+  id         String    @id @default(cuid())
+  userId     String
+  activityId String
+  weekdays   Int[] // 0=Ne … 6=So (JS Date.getDay)
+  startDate  DateTime  @db.Date
+  endDate    DateTime? @db.Date
+  active     Boolean   @default(true)
+  createdAt  DateTime  @default(now())
+
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activity Activity        @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  tasks    ScheduledTask[]
+
+  @@index([userId])
+  @@index([activityId])
+}
+
+model ScheduledTask {
+  id           String    @id @default(cuid())
+  userId       String
+  activityId   String
+  scheduleId   String? // vyplněno, pokud úkol vznikl z opakovaného rozvrhu
+  date         DateTime  @db.Date
+  title        String?
+  note         String?
+  durationMin  Int?
+  done         Boolean   @default(false)
+  completedAt  DateTime?
+  workoutLogId String?   @unique // záznam v historii vytvořený po splnění
+  createdAt    DateTime  @default(now())
+
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activity   Activity          @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  schedule   ActivitySchedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+  workoutLog WorkoutLog?       @relation(fields: [workoutLogId], references: [id], onDelete: SetNull)
+
+  @@unique([scheduleId, date]) // jeden rozvrh = max 1 úkol na den (ruční mají scheduleId NULL → bez omezení)
+  @@index([userId, date])
+  @@index([activityId])
 }
