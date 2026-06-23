@@ -39,6 +39,7 @@ export function ImageUpload({
       <ImageCropper
         src={editSrc}
         shape="square"
+        stack
         pending={disabled}
         onConfirm={(dataUrl) => {
           setEditSrc(null);

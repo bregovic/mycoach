@@ -14,6 +14,7 @@ export function ImageCropper({
   viewport = 200,
   out = 256,
   pending,
+  stack = false,
   onConfirm,
   onCancel,
 }: {
@@ -22,6 +23,7 @@ export function ImageCropper({
   viewport?: number;
   out?: number;
   pending?: boolean;
+  stack?: boolean; // ovládání pod obrázek (místo vedle) – pro úzké sloupce
   onConfirm: (dataUrl: string) => void;
   onCancel: () => void;
 }) {
@@ -100,7 +102,7 @@ export function ImageCropper({
   }
 
   return (
-    <div className={`flex flex-col items-center gap-4 sm:flex-row sm:items-start sm:gap-6 ${pending ? "pointer-events-none opacity-60" : ""}`}>
+    <div className={`flex flex-col items-center gap-4 ${stack ? "" : "sm:flex-row sm:items-start sm:gap-6"} ${pending ? "pointer-events-none opacity-60" : ""}`}>
       <div
         className={`relative shrink-0 touch-none overflow-hidden ring-2 ring-zinc-300 ${shape === "circle" ? "rounded-full" : "rounded-xl"}`}
         style={{ width: V, height: V, cursor: "grab" }}
@@ -127,7 +129,7 @@ export function ImageCropper({
         />
       </div>
 
-      <div className="w-full max-w-xs">
+      <div className={stack ? "w-full" : "w-full max-w-xs"} style={stack ? { maxWidth: V } : undefined}>
         <p className="text-sm font-medium text-zinc-700">Uprav výřez</p>
         <p className="mt-0.5 text-xs text-zinc-400">Táhni pro posun, posuvníkem přibliž.</p>
         <div className="mt-3 flex items-center gap-2">

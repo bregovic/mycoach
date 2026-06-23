@@ -94,6 +94,7 @@ export async function deleteTraining(id: string): Promise<void> {
   const userId = await requireUserId();
   await prisma.training.deleteMany({ where: { id, userId } }); // cascade smaže bloky i položky
   revalidatePath("/treninky");
+  redirect("/treninky"); // jinak by se refreshla smazaná stránka → 404
 }
 
 /** Přidá veřejný (nebo vlastní) trénink do kalendáře jako úkol na dnešek. */
