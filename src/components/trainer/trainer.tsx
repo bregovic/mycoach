@@ -21,7 +21,15 @@ export interface TrainerPreset {
   segments: Segment[];
 }
 
-export function Trainer({ userName, preset }: { userName: string; preset?: TrainerPreset | null }) {
+export function Trainer({
+  userName,
+  preset,
+  cues,
+}: {
+  userName: string;
+  preset?: TrainerPreset | null;
+  cues?: Record<string, string[]>;
+}) {
   const [participants, setParticipants] = useState(1);
   const [durationMin, setDurationMin] = useState(40);
   const [restSec, setRestSec] = useState(20);
@@ -65,10 +73,34 @@ export function Trainer({ userName, preset }: { userName: string; preset?: Train
   logMetaRef.current = logMeta;
 
   const instrRef = useRef<HTMLAudioElement | null>(null);
+  const cueRef = useRef<HTMLAudioElement | null>(null);
+  const cuesRef = useRef<Record<string, string[]>>(cues ?? {});
+  cuesRef.current = cues ?? {};
+
+  // Přehraje náhodný uživatelský zvukový pokyn daného typu. Vrací, zda něco hrálo.
+  const playCue = useCallback((type: string): boolean => {
+    const arr = cuesRef.current[type];
+    if (!arr || arr.length === 0) return false;
+    const url = arr[Math.floor(Math.random() * arr.length)];
+    try {
+      if (!cueRef.current) cueRef.current = new Audio();
+      cueRef.current.src = url;
+      void cueRef.current.play().catch(() => {});
+    } catch {
+      /* ignore */
+    }
+    return true;
+  }, []);
 
   const announce = useCallback(
     (sg: Segment) => {
-      audio.playBell(sg.kind === "prepare" || sg.kind === "finish");
+      // Technický cue podle typu úseku (náhradou za gong, pokud je nahraný).
+      let cuePlayed = false;
+      if (sg.kind === "prepare") cuePlayed = playCue("start");
+      else if (sg.kind === "work") cuePlayed = playCue("round_start");
+      else if (sg.kind === "rest") cuePlayed = playCue("round_end") || playCue("rest");
+      else if (sg.kind === "finish") cuePlayed = playCue("finish");
+      if (!cuePlayed) audio.playBell(sg.kind === "prepare" || sg.kind === "finish");
       // Nahraná MP3 instrukce má přednost před čtením (TTS).
       if (sg.audioUrl) {
         if (!speech.muted) {
@@ -89,7 +121,7 @@ export function Trainer({ userName, preset }: { userName: string; preset?: Train
           : sg.voiceText ?? "";
       speech.speak(text);
     },
-    [audio, speech],
+    [audio, speech, playCue],
   );
 
   const goTo = useCallback(
@@ -136,12 +168,15 @@ export function Trainer({ userName, preset }: { userName: string; preset?: Train
     }
     setTimeLeft(next);
     if (next <= 5) audio.playTick();
+    if (next === 5) playCue("countdown");
     if (sg.kind === "work" && sg.duration > 20 && next === Math.floor(sg.duration / 2)) {
       if (sg.coop === "v_pulce") {
-        audio.playBell(false);
-        speech.speak("Výměna rolí.");
+        if (!playCue("half_swap")) {
+          audio.playBell(false);
+          speech.speak("Výměna rolí.");
+        }
       } else if (sg.coop === "stridave") {
-        speech.speak("Střídání.");
+        if (!playCue("switch")) speech.speak("Střídání.");
       }
     }
   };
@@ -183,6 +218,7 @@ export function Trainer({ userName, preset }: { userName: string; preset?: Train
       setRunning(false);
       speech.pause();
       instrRef.current?.pause();
+      cueRef.current?.pause();
     } else {
       audio.unlock();
       setRunning(true);
@@ -196,6 +232,7 @@ export function Trainer({ userName, preset }: { userName: string; preset?: Train
     setSegments([]);
     speech.cancel();
     instrRef.current?.pause();
+    cueRef.current?.pause();
   };
 
   const anyPhase = CATEGORY_ORDER.some((k) => phases[k]);

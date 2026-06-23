@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Trainer } from "@/components/trainer/trainer";
 import { compileTraining } from "@/lib/trainer/compile";
+import { getUserCues } from "@/lib/sounds-server";
 
 const teko = Teko({
   subsets: ["latin", "latin-ext"],
@@ -58,12 +59,14 @@ export default async function PresetTrainingPage({
   });
 
   const userName = session.user.name ?? session.user.email ?? "sportovče";
+  const cues = await getUserCues(session.user.id);
 
   return (
     <div className={`${teko.variable} ${barlow.variable}`}>
       <Trainer
         userName={userName}
         preset={{ title: training.title, sportSlug: training.sportSlug, segments }}
+        cues={cues}
       />
     </div>
   );

@@ -46,6 +46,7 @@ model User {
   clubMemberships   ClubMember[]
   attendances       SessionAttendance[]
   exercisesOwned    Exercise[]         @relation("ExerciseOwner")
+  sounds            UserSound[]
 }
 
 model Account {
@@ -542,6 +543,19 @@ model ClubSession {
 
   @@unique([clubId, date, startMin])
   @@index([clubId, date])
+}
+
+// Vlastní zvukové pokyny uživatele (technické cue), víc MP3 na typ → náhodně.
+model UserSound {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String // start | round_start | round_end | rest | half_swap | switch | countdown | finish
+  audioKey  String // klíč MP3 v úložišti (R2, prefix mycoach/sounds/)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
 }
 
 model SessionAttendance {

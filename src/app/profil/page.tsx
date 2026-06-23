@@ -8,6 +8,7 @@ import { WeightChart, type WeightPoint } from "@/components/weight-chart";
 import { calcAge, calcBmi, bmiCategory, type BmiTone } from "@/lib/health";
 import { AppHeader } from "@/components/app-header";
 import { AvatarUploader } from "@/components/avatar-uploader";
+import { SoundSettings } from "@/components/sound-settings";
 
 export const metadata = { title: "Profil" };
 
@@ -46,7 +47,7 @@ export default async function ProfilePage() {
   if (!session?.user?.id) redirect("/login");
   const userId = session.user.id;
 
-  const [user, profile, metrics] = await Promise.all([
+  const [user, profile, metrics, soundRows] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId }, select: { name: true, email: true, image: true } }),
     prisma.profile.findUnique({ where: { userId } }),
     prisma.bodyMetric.findMany({
@@ -54,7 +55,10 @@ export default async function ProfilePage() {
       orderBy: { date: "asc" },
       select: { date: true, weightKg: true, bodyFat: true },
     }),
+    prisma.userSound.findMany({ where: { userId }, orderBy: { createdAt: "asc" }, select: { id: true, type: true, audioKey: true } }),
   ]);
+  const soundsByType: Record<string, { id: string; key: string }[]> = {};
+  for (const s of soundRows) (soundsByType[s.type] ??= []).push({ id: s.id, key: s.audioKey });
   const displayName = user?.name ?? user?.email ?? "";
   const latest = metrics.at(-1) ?? null;
 
@@ -159,6 +163,12 @@ export default async function ProfilePage() {
         <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6">
           <h2 className="mb-4 text-base font-semibold text-zinc-900">Údaje profilu</h2>
           <ProfileForm values={values} />
+        </div>
+
+        {/* Zvukové pokyny */}
+        <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6">
+          <h2 className="mb-4 text-base font-semibold text-zinc-900">Zvukové pokyny (MP3)</h2>
+          <SoundSettings byType={soundsByType} />
         </div>
       </section>
     </main>
