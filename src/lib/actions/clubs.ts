@@ -151,25 +151,30 @@ export async function deleteScheduleRule(id: string): Promise<void> {
 
 // --- Pozvánky a členství ---------------------------------------------------
 
-export async function inviteMember(clubId: string, email: string): Promise<void> {
+export async function inviteMember(clubId: string, email: string, role: string): Promise<void> {
   const { id: userId } = await requireUser();
   await requireOwner(clubId, userId);
   const e = str(email, 120).toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) return;
+  const r = role === "trainer" ? "trainer" : "member";
 
-  // už je členem?
+  // už je členem? případně rovnou povýším roli
   const existingUser = await prisma.user.findUnique({ where: { email: e }, select: { id: true } });
   if (existingUser) {
     const m = await prisma.clubMember.findUnique({
       where: { clubId_userId: { clubId, userId: existingUser.id } },
       select: { id: true },
     });
-    if (m) return;
+    if (m) {
+      if (existingUser.id !== userId) await prisma.clubMember.update({ where: { id: m.id }, data: { role: r } });
+      revalidate(clubId);
+      return;
+    }
   }
   await prisma.clubInvite.upsert({
     where: { clubId_email: { clubId, email: e } },
-    create: { clubId, email: e, invitedById: userId, status: "pending" },
-    update: { status: "pending" },
+    create: { clubId, email: e, role: r, invitedById: userId, status: "pending" },
+    update: { status: "pending", role: r },
   });
   revalidate(clubId);
 }
@@ -187,10 +192,11 @@ export async function acceptInvite(inviteId: string): Promise<void> {
   const { id: userId, email } = await requireUser();
   const inv = await prisma.clubInvite.findUnique({ where: { id: inviteId } });
   if (!inv || inv.email.toLowerCase() !== email || inv.status !== "pending") return;
+  const role = inv.role === "trainer" ? "trainer" : "member";
   await prisma.clubMember.upsert({
     where: { clubId_userId: { clubId: inv.clubId, userId } },
-    create: { clubId: inv.clubId, userId, role: "member" },
-    update: {},
+    create: { clubId: inv.clubId, userId, role },
+    update: { role },
   });
   await prisma.clubInvite.update({ where: { id: inviteId }, data: { status: "accepted" } });
   revalidate(inv.clubId);
@@ -250,20 +256,26 @@ async function sessionClub(sessionId: string): Promise<string | null> {
   return s?.clubId ?? null;
 }
 
-/** Přihlásí/odhlásí účast na termínu (jen člen oddílu). */
-export async function toggleAttendance(sessionId: string): Promise<void> {
+/**
+ * Nastaví můj stav na termínu: "going" (přijdu) nebo "excused" (omluveno).
+ * Kliknutí na již aktivní stav ho zruší (žádná odpověď). Jen člen oddílu.
+ */
+export async function setAttendance(sessionId: string, status: string): Promise<void> {
   const { id: userId } = await requireUser();
+  const value = status === "excused" ? "excused" : "going";
   const clubId = await sessionClub(sessionId);
   if (!clubId) return;
   if ((await clubRole(clubId, userId)) == null) return; // musí být člen
   const existing = await prisma.sessionAttendance.findUnique({
     where: { sessionId_userId: { sessionId, userId } },
-    select: { id: true },
+    select: { id: true, status: true },
   });
-  if (existing) {
+  if (existing && existing.status === value) {
     await prisma.sessionAttendance.delete({ where: { id: existing.id } });
+  } else if (existing) {
+    await prisma.sessionAttendance.update({ where: { id: existing.id }, data: { status: value } });
   } else {
-    await prisma.sessionAttendance.create({ data: { sessionId, userId } });
+    await prisma.sessionAttendance.create({ data: { sessionId, userId, status: value } });
   }
   revalidate(clubId);
 }

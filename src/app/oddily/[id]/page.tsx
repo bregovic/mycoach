@@ -45,7 +45,7 @@ export default async function ClubDetailPage({ params }: { params: Promise<{ id:
     orderBy: [{ date: "asc" }, { startMin: "asc" }],
     include: {
       training: { select: { title: true } },
-      attendances: { select: { userId: true } },
+      attendances: { select: { userId: true, status: true, user: { select: { name: true, email: true } } } },
     },
   });
 
@@ -73,19 +73,26 @@ export default async function ClubDetailPage({ params }: { params: Promise<{ id:
       name: m.user.name ?? m.user.email ?? "?",
       role: m.userId === club.ownerId ? "owner" : m.role,
     })),
-    invites: club.invites.map((i) => ({ id: i.id, email: i.email })),
+    invites: club.invites.map((i) => ({ id: i.id, email: i.email, role: i.role })),
     sessions: sessions.map((s) => {
-      const count = s.attendances.length;
+      const going = s.attendances.filter((a) => a.status === "going");
+      const excused = s.attendances.filter((a) => a.status === "excused");
+      const mine = s.attendances.find((a) => a.userId === userId);
+      const nameOf = (a: (typeof s.attendances)[number]) => a.user.name ?? a.user.email ?? "?";
       return {
         id: s.id,
         dateKey: s.date.toISOString().slice(0, 10),
         startMin: s.startMin,
         endMin: s.endMin,
-        status: sessionStatus(s, count),
-        attendeeCount: count,
-        iAttend: s.attendances.some((a) => a.userId === userId),
+        status: sessionStatus(s, going.length),
+        goingCount: going.length,
+        myStatus: mine?.status ?? null,
         trainingId: s.trainingId,
         trainingTitle: s.training?.title ?? null,
+        attendees: [
+          ...going.map((a) => ({ name: nameOf(a), status: "going" as const })),
+          ...excused.map((a) => ({ name: nameOf(a), status: "excused" as const })),
+        ],
       };
     }),
     trainings,

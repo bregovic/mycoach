@@ -79,6 +79,7 @@ export default async function ClubsPage({
                 <div className="min-w-0 flex-1">
                   <p className="text-sm text-zinc-700">
                     Pozvánka do oddílu <strong>{inv.club.name}</strong>
+                    {inv.role === "trainer" ? " (jako trenér)" : ""}
                   </p>
                 </div>
                 <form action={acceptInvite.bind(null, inv.id)}>

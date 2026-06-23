@@ -19,8 +19,8 @@ import {
   joinClub,
   leaveClub,
   removeMember,
+  setAttendance,
   setMemberRole,
-  toggleAttendance,
   updateClubLogo,
   updateClubMeta,
 } from "@/lib/actions/clubs";
@@ -35,17 +35,18 @@ export interface ClubDTO {
   myRole: string | null;
   rules: { id: string; weekdays: number[]; startMin: number; endMin: number }[];
   members: { userId: string; name: string; role: string }[];
-  invites: { id: string; email: string }[];
+  invites: { id: string; email: string; role: string }[];
   sessions: {
     id: string;
     dateKey: string;
     startMin: number;
     endMin: number;
     status: SessionStatus;
-    attendeeCount: number;
-    iAttend: boolean;
+    goingCount: number;
+    myStatus: string | null; // going | excused | null
     trainingId: string | null;
     trainingTitle: string | null;
+    attendees: { name: string; status: "going" | "excused" }[];
   }[];
   trainings: { id: string; title: string }[];
 }
@@ -195,19 +196,46 @@ export function ClubView({ club }: { club: ClubDTO }) {
               </div>
 
               <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-zinc-500">
-                <span>{s.attendeeCount} přihlášeno</span>
+                <span>{s.goingCount} přijde</span>
                 {s.trainingTitle && <span>· 🥊 {s.trainingTitle}</span>}
               </div>
 
+              {/* Přehled kdo přijde / kdo se omluvil */}
+              {s.attendees.length > 0 && (
+                <div className="mt-2 space-y-0.5 text-xs">
+                  {s.attendees.some((a) => a.status === "going") && (
+                    <p className="text-zinc-500">
+                      <span className="font-medium text-green-700">Přijde:</span>{" "}
+                      {s.attendees.filter((a) => a.status === "going").map((a) => a.name).join(", ")}
+                    </p>
+                  )}
+                  {s.attendees.some((a) => a.status === "excused") && (
+                    <p className="text-zinc-500">
+                      <span className="font-medium text-red-700">Omluveni:</span>{" "}
+                      {s.attendees.filter((a) => a.status === "excused").map((a) => a.name).join(", ")}
+                    </p>
+                  )}
+                </div>
+              )}
+
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {isMember && (
-                  <button
-                    type="button"
-                    onClick={() => run(() => toggleAttendance(s.id))}
-                    className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${s.iAttend ? "bg-green-600 text-white hover:bg-green-700" : "border border-zinc-300 text-zinc-700 hover:bg-zinc-100"}`}
-                  >
-                    {s.iAttend ? "✓ Zúčastním se" : "Zúčastnit se"}
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => run(() => setAttendance(s.id, "going"))}
+                      className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${s.myStatus === "going" ? "bg-green-600 text-white hover:bg-green-700" : "border border-zinc-300 text-zinc-700 hover:bg-zinc-100"}`}
+                    >
+                      {s.myStatus === "going" ? "✓ Přijdu" : "Přijdu"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => run(() => setAttendance(s.id, "excused"))}
+                      className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${s.myStatus === "excused" ? "bg-red-600 text-white hover:bg-red-700" : "border border-red-300 text-red-600 hover:bg-red-50"}`}
+                    >
+                      {s.myStatus === "excused" ? "✓ Omluveno" : "Omluvit se"}
+                    </button>
+                  </>
                 )}
                 {isTrainer && (
                   <>
@@ -275,19 +303,23 @@ export function ClubView({ club }: { club: ClubDTO }) {
                 const fd = new FormData(e.currentTarget);
                 const email = String(fd.get("email") ?? "").trim();
                 if (!email) return;
-                run(() => inviteMember(club.id, email));
+                run(() => inviteMember(club.id, email, String(fd.get("role") ?? "member")));
                 e.currentTarget.reset();
               }}
-              className="flex gap-2"
+              className="flex flex-wrap gap-2"
             >
-              <input name="email" type="email" placeholder="E-mail pro pozvánku…" className={`${input} w-full`} />
+              <input name="email" type="email" placeholder="E-mail pro pozvánku…" className={`${input} min-w-[10rem] flex-1`} />
+              <select name="role" defaultValue="member" className={input}>
+                <option value="member">jako člen</option>
+                <option value="trainer">jako trenér</option>
+              </select>
               <button type="submit" className="shrink-0 rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-zinc-800">Pozvat</button>
             </form>
             {club.invites.length > 0 && (
               <ul className="mt-3 space-y-1">
                 {club.invites.map((inv) => (
                   <li key={inv.id} className="flex items-center justify-between rounded-lg bg-zinc-50 px-3 py-1.5 text-sm">
-                    <span className="text-zinc-600">{inv.email} · čeká</span>
+                    <span className="text-zinc-600">{inv.email} · {inv.role === "trainer" ? "trenér" : "člen"} · čeká</span>
                     <button type="button" onClick={() => run(() => cancelInvite(inv.id))} className="text-zinc-400 hover:text-red-600" aria-label="Zrušit pozvánku">×</button>
                   </li>
                 ))}

@@ -505,6 +505,7 @@ model ClubInvite {
   id          String   @id @default(cuid())
   clubId      String
   email       String // pozvánka podle e-mailu
+  role        String   @default("member") // member | trainer (role po přijetí)
   status      String   @default("pending") // pending | accepted | declined
   invitedById String?
   createdAt   DateTime @default(now())
@@ -540,6 +541,7 @@ model SessionAttendance {
   id        String   @id @default(cuid())
   sessionId String
   userId    String
+  status    String   @default("going") // going | excused (omluveno)
   createdAt DateTime @default(now())
 
   session ClubSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
