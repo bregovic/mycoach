@@ -7,13 +7,21 @@ import { BOX_DRILLS, drillCount } from "@/lib/trainer/drills";
 import { formatTime, generateWorkout, phaseLabel, workoutTotals } from "@/lib/trainer/generate";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/trainer/types";
 import type { CategoryKey, Segment } from "@/lib/trainer/types";
+import { logCompletedWorkout } from "@/lib/actions/trainings";
 import { useAudio } from "./use-audio";
 import { useSpeech } from "./use-speech";
 
 const stateClass = (k: Segment["kind"]) =>
   k === "work" ? s.work : k === "rest" ? s.rest : k === "prepare" ? s.prepare : s.finish;
 
-export function Trainer({ userName }: { userName: string }) {
+/** Předpřipravený (autorovaný) trénink k přehrání místo procedurálního generování. */
+export interface TrainerPreset {
+  title: string;
+  sportSlug?: string | null;
+  segments: Segment[];
+}
+
+export function Trainer({ userName, preset }: { userName: string; preset?: TrainerPreset | null }) {
   const [participants, setParticipants] = useState(1);
   const [durationMin, setDurationMin] = useState(40);
   const [restSec, setRestSec] = useState(20);
@@ -47,6 +55,14 @@ export function Trainer({ userName }: { userName: string }) {
   segsRef.current = segments;
   const tickRef = useRef<() => void>(() => {});
   const activeSegRef = useRef<HTMLDivElement | null>(null);
+  const completedRef = useRef(false);
+
+  // Po přirozeném dokončení tréninku ulož záznam do historie (WorkoutLog).
+  const logMeta = preset
+    ? { title: preset.title, sportSlug: preset.sportSlug ?? null }
+    : { title: "Hlasový trénink", sportSlug: "box" };
+  const logMetaRef = useRef(logMeta);
+  logMetaRef.current = logMeta;
 
   const announce = useCallback(
     (sg: Segment) => {
@@ -64,6 +80,20 @@ export function Trainer({ userName }: { userName: string }) {
     (i: number) => {
       const segs = segsRef.current;
       if (i < 0 || i >= segs.length) {
+        // Konec přehrávání. Pokud trénink doběhl přirozeně (ne ručním ukončením),
+        // ulož ho jednou do historie.
+        if (!completedRef.current && idxRef.current >= 0 && segs.length > 1) {
+          completedRef.current = true;
+          const t = workoutTotals(segs);
+          if (t.rounds > 0) {
+            void logCompletedWorkout({
+              title: logMetaRef.current.title,
+              sportSlug: logMetaRef.current.sportSlug,
+              durationMin: Math.round(t.totalSec / 60),
+              rounds: t.rounds,
+            }).catch(() => {});
+          }
+        }
         setRunning(false);
         setIndex(-1);
         setSegments([]);
@@ -111,14 +141,17 @@ export function Trainer({ userName }: { userName: string }) {
   }, [index]);
 
   const start = () => {
-    const segs = generateWorkout(BOX_DRILLS, {
-      participants,
-      durationMin,
-      restSec,
-      phases,
-      names: names.slice(0, participants),
-    });
+    const segs = preset
+      ? preset.segments
+      : generateWorkout(BOX_DRILLS, {
+          participants,
+          durationMin,
+          restSec,
+          phases,
+          names: names.slice(0, participants),
+        });
     if (segs.length <= 1) return;
+    completedRef.current = false;
     audio.unlock();
     segsRef.current = segs;
     setSegments(segs);
@@ -149,7 +182,106 @@ export function Trainer({ userName }: { userName: string }) {
 
   const anyPhase = CATEGORY_ORDER.some((k) => phases[k]);
 
-  // ---------------- SETUP ----------------
+  // ---------------- SETUP (autorovaný trénink) ----------------
+  if (!started && preset) {
+    const pt = workoutTotals(preset.segments);
+    return (
+      <div className={s.wrap}>
+        <div className={s.inner}>
+          <header className={s.header}>
+            <span className={s.logo}>
+              My<b>Coach</b> · Trénink
+            </span>
+            <Link href="/treninky" className={s.back}>
+              ← Moje tréninky
+            </Link>
+          </header>
+
+          <div className={s.grid}>
+            <section className={s.card}>
+              <h2 className={s.h2}>{preset.title}</h2>
+              <p className={s.sub}>
+                {preset.sportSlug ? `${preset.sportSlug} · ` : ""}
+                {pt.rounds} kol · práce {formatTime(pt.workSec)}
+              </p>
+              <div className={s.tlTotals} style={{ marginTop: "1rem" }}>
+                <span>
+                  Celkem <b>{formatTime(pt.totalSec)}</b>
+                </span>
+                <span>
+                  Práce <b>{formatTime(pt.workSec)}</b>
+                </span>
+                <span>
+                  Kol <b>{pt.rounds}</b>
+                </span>
+              </div>
+              <button
+                className={`${s.btn} ${s.btnPrimary}`}
+                style={{ marginTop: "1.25rem" }}
+                onClick={start}
+                disabled={pt.rounds === 0}
+              >
+                ▶ Spustit trénink
+              </button>
+            </section>
+
+            <section className={s.card}>
+              <h2 className={s.h2}>Hlas a zvuk</h2>
+              {speech.supported ? (
+                <>
+                  <div className={s.field}>
+                    <div className={s.label}>
+                      <span>Hlas (čeština)</span>
+                    </div>
+                    <select
+                      className={s.select}
+                      value={speech.voiceURI ?? ""}
+                      onChange={(e) => speech.setVoiceURI(e.target.value)}
+                    >
+                      {speech.voices.map((v) => (
+                        <option key={v.voiceURI} value={v.voiceURI}>
+                          {v.name} ({v.lang})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className={s.field}>
+                    <div className={s.label}>
+                      <span>Rychlost hlasu</span>
+                      <b>{speech.rate.toFixed(2)}×</b>
+                    </div>
+                    <input
+                      className={s.range}
+                      type="range"
+                      min={0.6}
+                      max={1.3}
+                      step={0.05}
+                      value={speech.rate}
+                      onChange={(e) => speech.setRate(Number(e.target.value))}
+                    />
+                  </div>
+                  <button
+                    className={s.btn}
+                    onClick={() => speech.speak("Hlasový trenér je připraven.")}
+                  >
+                    🔊 Vyzkoušet hlas
+                  </button>
+                </>
+              ) : (
+                <p className={s.sub}>Tvůj prohlížeč nepodporuje hlasovou syntézu.</p>
+              )}
+              <p className={s.next} style={{ marginTop: "1.25rem" }}>
+                Ahoj <b>{userName}</b>. Tohle je tvůj vlastní trénink — systém tě hlasem provede koly
+                i pauzami. Po dokončení se uloží do historie.
+              </p>
+            </section>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ---------------- SETUP (procedurální generátor) ----------------
   if (!started) {
     return (
       <div className={s.wrap}>

@@ -65,11 +65,16 @@ export default async function DashboardPage() {
             </span>
           </Link>
 
-          <div className="flex flex-col rounded-2xl border border-dashed border-zinc-200 bg-white/50 p-6">
-            <h2 className="text-lg font-medium text-zinc-400">Plány</h2>
-            <p className="mt-1 text-sm text-zinc-400">Sporty a tréninkové plány</p>
-            <span className="mt-6 text-xs font-medium uppercase tracking-wide text-zinc-300">Brzy</span>
-          </div>
+          <Link
+            href="/treninky"
+            className="group flex flex-col rounded-2xl border border-zinc-200 bg-white p-6 transition hover:border-zinc-300 hover:shadow-sm"
+          >
+            <h2 className="text-lg font-medium text-zinc-900">Moje tréninky</h2>
+            <p className="mt-1 text-sm text-zinc-500">Skládej vlastní tréninky z bloků</p>
+            <span className="mt-6 text-sm font-medium text-zinc-400 transition group-hover:text-zinc-700">
+              Otevřít →
+            </span>
+          </Link>
         </div>
       </section>
     </main>
