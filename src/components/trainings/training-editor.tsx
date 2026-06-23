@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition, type FormEvent } from "react";
+import { useMemo, useRef, useState, useTransition, type FormEvent } from "react";
 import {
   addBlock,
   addItem,
@@ -287,6 +287,18 @@ function BlockCard({
   const [filter, setFilter] = useState("");
   const [note, setNote] = useState<string | null>(null);
   const [newPrivate, setNewPrivate] = useState(false);
+  const titleRef = useRef<HTMLInputElement>(null);
+
+  // Při výběru kategorie předvyplň název bloku (jen je-li prázdný/výchozí),
+  // dál ho lze normálně přepsat.
+  function onCategoryChange(slug: string) {
+    const labels = Object.values(CATEGORY_LABELS);
+    const cur = titleRef.current?.value.trim() ?? "";
+    const isDefault = cur === "" || cur === "Nový blok" || labels.includes(cur);
+    if (slug && isDefault && titleRef.current) {
+      titleRef.current.value = CATEGORY_LABELS[slug as keyof typeof CATEGORY_LABELS] ?? cur;
+    }
+  }
 
   function createInCatalog() {
     const name = filter.trim();
@@ -339,6 +351,7 @@ function BlockCard({
           </div>
           <div className="flex-1">
             <input
+              ref={titleRef}
               name="title"
               defaultValue={block.title}
               className="w-full rounded-lg border border-transparent bg-transparent px-1 py-1 text-lg font-medium text-zinc-900 outline-none transition hover:border-zinc-200 focus:border-zinc-400"

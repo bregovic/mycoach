@@ -273,6 +273,7 @@ model ScheduledTask {
   note         String?
   durationMin  Int?
   done         Boolean   @default(false)
+  status       String    @default("open") // open | done | cancelled | postponed
   completedAt  DateTime?
   workoutLogId String?   @unique // záznam v historii vytvořený po splnění
   clubSessionId String?  // úkol vznikl z přihlášení na oddílový termín („Přijdu")

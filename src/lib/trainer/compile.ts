@@ -56,12 +56,16 @@ function asCategory(v?: string | null): CategoryKey | undefined {
 /** Sestaví trénink z autorované struktury jako pole segmentů pro přehrávač. */
 export function compileTraining(t: AuthoredTraining): Segment[] {
   const out: Segment[] = [];
-  out.push({
-    kind: "prepare",
-    name: "Příprava na trénink",
-    voiceText: "Trénink začíná. Připravte se.",
-    duration: Math.max(3, t.prepareSec || 10),
-  });
+  // Příprava: respektuj 0 (= bez přípravy); jen když není zadaná vůbec, použij 10.
+  const prep = Number.isFinite(t.prepareSec) ? Math.max(0, t.prepareSec) : 10;
+  if (prep > 0) {
+    out.push({
+      kind: "prepare",
+      name: "Příprava na trénink",
+      voiceText: "Trénink začíná. Připravte se.",
+      duration: Math.max(3, prep),
+    });
+  }
 
   for (const block of t.blocks) {
     const phase = asCategory(block.category);

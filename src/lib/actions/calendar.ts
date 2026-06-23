@@ -101,7 +101,7 @@ export async function setTaskDone(id: string, done: boolean) {
     }
     await prisma.scheduledTask.update({
       where: { id: task.id },
-      data: { done: true, completedAt: new Date(), workoutLogId },
+      data: { done: true, status: "done", completedAt: new Date(), workoutLogId },
     });
   } else {
     if (task.workoutLogId) {
@@ -109,10 +109,49 @@ export async function setTaskDone(id: string, done: boolean) {
     }
     await prisma.scheduledTask.update({
       where: { id: task.id },
-      data: { done: false, completedAt: null, workoutLogId: null },
+      data: { done: false, status: "open", completedAt: null, workoutLogId: null },
     });
   }
   revalidatePath("/kalendar");
+}
+
+/**
+ * Nastaví stav úkolu: splněno (done) / zrušeno (cancelled) / odloženo (postponed)
+ * / open. „Splněno" založí WorkoutLog (historie); ostatní ho případně odeberou.
+ */
+export async function setTaskStatus(id: string, status: string): Promise<void> {
+  const userId = await requireUserId();
+  if (!["open", "done", "cancelled", "postponed"].includes(status)) return;
+  const task = await prisma.scheduledTask.findFirst({
+    where: { id, userId },
+    include: { activity: { select: { name: true } } },
+  });
+  if (!task) return;
+
+  if (status === "done") {
+    let workoutLogId = task.workoutLogId;
+    if (!workoutLogId) {
+      const log = await prisma.workoutLog.create({
+        data: { userId, date: task.date, title: task.activity.name, durationMin: task.durationMin ?? null, note: task.note ?? null },
+      });
+      workoutLogId = log.id;
+    }
+    await prisma.scheduledTask.update({
+      where: { id: task.id },
+      data: { done: true, status: "done", completedAt: new Date(), workoutLogId },
+    });
+  } else {
+    if (task.workoutLogId) {
+      await prisma.workoutLog.deleteMany({ where: { id: task.workoutLogId, userId } });
+    }
+    await prisma.scheduledTask.update({
+      where: { id: task.id },
+      data: { done: false, status, completedAt: null, workoutLogId: null },
+    });
+  }
+  revalidatePath("/kalendar");
+  revalidatePath("/dashboard");
+  revalidatePath("/historie");
 }
 
 // --- Opakovaný rozvrh -----------------------------------------------------

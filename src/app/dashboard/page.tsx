@@ -6,6 +6,7 @@ import { AppHeader } from "@/components/app-header";
 import { ensureScheduleTasks } from "@/lib/calendar-tasks";
 import { dateKey, keyToDate } from "@/lib/calendar";
 import { minToHHMM } from "@/lib/clubs";
+import { TodayTasks } from "@/components/dashboard/today-tasks";
 
 export const metadata = { title: "Přehled" };
 
@@ -81,20 +82,24 @@ export default async function DashboardPage() {
                 </div>
               ))}
 
-              {tasks.map((t) => (
-                <div key={t.id} className="flex items-center gap-3 rounded-xl border border-zinc-200 p-3">
-                  <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: t.activity.color }} />
-                  <span className={t.done ? "text-zinc-400 line-through" : "text-zinc-800"}>{t.activity.name}</span>
-                  {t.durationMin ? <span className="text-xs text-zinc-400">{t.durationMin} min</span> : null}
-                  {t.note && <span className="truncate text-xs text-zinc-400">· {t.note}</span>}
-                  {t.done && <span className="ml-auto text-xs font-medium text-green-600">hotovo</span>}
-                </div>
-              ))}
+              <TodayTasks
+                tasks={tasks.map((t) => ({
+                  id: t.id,
+                  name: t.activity.name,
+                  color: t.activity.color,
+                  durationMin: t.durationMin,
+                  note: t.note,
+                  status: t.status,
+                }))}
+              />
             </div>
           )}
-          <div className="mt-4">
+          <div className="mt-4 flex items-center gap-4">
             <Link href="/kalendar" className="text-sm font-medium text-zinc-500 transition hover:text-zinc-800">
               Celý kalendář →
+            </Link>
+            <Link href="/historie" className="text-sm font-medium text-zinc-500 transition hover:text-zinc-800">
+              Historie →
             </Link>
           </div>
         </div>
