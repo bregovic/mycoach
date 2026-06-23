@@ -67,7 +67,7 @@ export default async function CatalogPage() {
   return (
     <main className="min-h-dvh bg-gradient-to-b from-zinc-50 to-zinc-100/40">
       <AppHeader back={{ href: "/dashboard", label: "Katalog cviků" }} />
-      <section className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
+      <section className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Katalog cviků</h1>
         <p className="mt-1 text-sm text-zinc-500">
           Sdílený číselník podle sportu. Vidíš veřejné cviky i svoje. Úprava cizího cviku vytvoří

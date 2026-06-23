@@ -1,20 +1,27 @@
 "use client";
 
-import { useRef, useState, type DragEvent } from "react";
+import { useRef, useState, type DragEvent, type ReactNode } from "react";
 import { ImageCropper } from "./image-cropper";
 
-// Upload obrázku (logo tréninku) s interaktivním ořezem (zoom/posun) – stejný
-// cropper jako profilovka, jen čtvercový zaoblený výřez.
+// Upload obrázku (logo) s interaktivním ořezem (zoom/posun) – stejný cropper
+// jako profilovka, jen čtvercový zaoblený výřez. `size` zmenší dlaždici (např.
+// jako ikona sportu), `placeholder` nahradí výchozí prázdný stav.
 export function ImageUpload({
   url,
   onPick,
   onClear,
   disabled,
+  size = 112,
+  placeholder,
+  hideRemove = false,
 }: {
   url: string | null;
   onPick: (dataUrl: string) => void;
   onClear: () => void;
   disabled?: boolean;
+  size?: number;
+  placeholder?: ReactNode;
+  hideRemove?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [drag, setDrag] = useState(false);
@@ -66,22 +73,23 @@ export function ImageUpload({
           setDrag(false);
           loadFile(e.dataTransfer.files?.[0]);
         }}
-        className={`group relative flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition ${
+        style={{ width: size, height: size }}
+        className={`group relative flex shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition ${
           drag ? "border-zinc-900 bg-zinc-50" : "border-zinc-300 hover:border-zinc-400 hover:bg-zinc-50"
         }`}
-        aria-label="Nahrát logo tréninku"
+        aria-label="Nahrát obrázek"
       >
         {url ? (
           // eslint-disable-next-line @next/next/no-img-element -- data URL
           <img src={url} alt="" className="h-full w-full object-cover" />
         ) : (
-          <span className="px-2 text-center text-xs text-zinc-400">Logo / obrázek</span>
+          placeholder ?? <span className="px-2 text-center text-xs text-zinc-400">Logo / obrázek</span>
         )}
         <span className="absolute inset-0 flex items-center justify-center bg-zinc-900/0 text-xs font-medium text-transparent transition group-hover:bg-zinc-900/55 group-hover:text-white">
           {url ? "Změnit" : "Nahrát"}
         </span>
       </button>
-      {url && (
+      {url && !hideRemove && (
         <button
           type="button"
           onClick={onClear}

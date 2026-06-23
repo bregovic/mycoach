@@ -81,10 +81,29 @@ export function CatalogManager({
 
   return (
     <div className={pending ? "pointer-events-none opacity-60" : ""}>
-      {/* Sport (lookup) + admin: foto a přidání sportu */}
+      {/* Sport (lookup) – fotka/ikona vlevo u výběru */}
       <div className="rounded-2xl border border-zinc-200 bg-white p-5">
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="min-w-[12rem] flex-1">
+        <div className="flex items-end gap-3">
+          {isAdmin && currentSport ? (
+            <ImageUpload
+              size={56}
+              url={currentSport.imageUrl}
+              disabled={pending}
+              placeholder={<span className="text-2xl">{currentSport.icon ?? "🏷️"}</span>}
+              onPick={(d) => run(() => updateSportImage(currentSport.slug, d))}
+              onClear={() => run(() => updateSportImage(currentSport.slug, null))}
+            />
+          ) : (
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-zinc-100 text-2xl ring-1 ring-zinc-200">
+              {currentSport?.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element -- data URL
+                <img src={currentSport.imageUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                (currentSport?.icon ?? "🏷️")
+              )}
+            </span>
+          )}
+          <div className="min-w-[10rem] flex-1">
             <label className={label}>Sport</label>
             <select value={sport} onChange={(e) => setSport(e.target.value)} className={`${input} mt-1`}>
               {sports.length === 0 && <option value="">— žádný sport —</option>}
@@ -96,14 +115,6 @@ export function CatalogManager({
               ))}
             </select>
           </div>
-          {isAdmin && currentSport && (
-            <ImageUpload
-              url={currentSport.imageUrl}
-              disabled={pending}
-              onPick={(d) => run(() => updateSportImage(currentSport.slug, d))}
-              onClear={() => run(() => updateSportImage(currentSport.slug, null))}
-            />
-          )}
         </div>
         {isAdmin && (
           <form
@@ -234,33 +245,53 @@ function ExerciseRow({ ex, run }: { ex: CatExercise; run: (fn: () => Promise<unk
           }),
         );
       }}
-      className="rounded-xl border border-zinc-200 bg-white p-3"
+      className="rounded-2xl border border-zinc-200 bg-white p-4 sm:p-5"
     >
-      <div className="mb-2 flex items-center gap-2">
-        <span className={`rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${ex.mine ? "bg-blue-50 text-blue-600" : "bg-zinc-100 text-zinc-500"}`}>
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <span className={`rounded px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide ${ex.mine ? "bg-blue-50 text-blue-600" : "bg-zinc-100 text-zinc-500"}`}>
           {ex.mine ? "vlastní" : "veřejné"}
         </span>
-        {ex.isPrivate && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-700">soukromé</span>}
-        {!ex.mine && <span className="text-[11px] text-zinc-400">úprava vytvoří kopii</span>}
+        {ex.isPrivate && <span className="rounded bg-amber-50 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-amber-700">soukromé</span>}
+        {!ex.mine && <span className="text-xs text-zinc-400">úprava vytvoří tvou kopii</span>}
       </div>
-      <div className="grid gap-2 sm:grid-cols-[1fr_140px_120px_80px]">
-        <input name="name" defaultValue={ex.name} className={input} />
-        <select name="category" defaultValue={ex.category ?? ""} className={input}>
-          <option value="">— bez —</option>
-          {CATEGORY_ORDER.map((k) => (
-            <option key={k} value={k}>{CATEGORY_LABELS[k]}</option>
-          ))}
-        </select>
-        <select name="coop" defaultValue={ex.coop ?? "najednou"} className={input}>
-          {Object.entries(COOP_LABELS).map(([v, l]) => (
-            <option key={v} value={v}>{l}</option>
-          ))}
-        </select>
-        <input name="defaultSec" type="number" min={5} max={1800} defaultValue={ex.defaultSec ?? 180} className={input} />
-        <input name="spokenName" defaultValue={ex.spokenName ?? ""} placeholder="Mluvený název" className={`${input} sm:col-span-2`} />
-        <input name="voiceText" defaultValue={ex.voiceText ?? ""} placeholder="Hlasový pokyn" className={`${input} sm:col-span-2`} />
+      <div className="space-y-3">
+        <div>
+          <label className={label}>Název cviku</label>
+          <input name="name" defaultValue={ex.name} className={`${input} mt-1 text-base`} />
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div>
+            <label className={label}>Kategorie</label>
+            <select name="category" defaultValue={ex.category ?? ""} className={`${input} mt-1`}>
+              <option value="">— bez —</option>
+              {CATEGORY_ORDER.map((k) => (
+                <option key={k} value={k}>{CATEGORY_LABELS[k]}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={label}>Režim</label>
+            <select name="coop" defaultValue={ex.coop ?? "najednou"} className={`${input} mt-1`}>
+              {Object.entries(COOP_LABELS).map(([v, l]) => (
+                <option key={v} value={v}>{l}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={label}>Délka (s)</label>
+            <input name="defaultSec" type="number" min={5} max={1800} defaultValue={ex.defaultSec ?? 180} className={`${input} mt-1`} />
+          </div>
+        </div>
+        <div>
+          <label className={label}>Mluvený název</label>
+          <input name="spokenName" defaultValue={ex.spokenName ?? ""} placeholder="Český mluvený název (pro hlas)" className={`${input} mt-1`} />
+        </div>
+        <div>
+          <label className={label}>Hlasový pokyn</label>
+          <input name="voiceText" defaultValue={ex.voiceText ?? ""} placeholder="Detailní pokyn čtený v přehrávači" className={`${input} mt-1`} />
+        </div>
       </div>
-      <div className="mt-2 flex items-center justify-between">
+      <div className="mt-4 flex items-center justify-between">
         <label className="flex items-center gap-2 text-xs text-zinc-600">
           <input type="checkbox" name="isPrivate" defaultChecked={ex.isPrivate} className="h-3.5 w-3.5 rounded border-zinc-300 accent-zinc-900" />
           soukromé

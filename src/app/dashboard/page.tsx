@@ -20,6 +20,7 @@ const TILES: Tile[] = [
   { href: "/treninky", icon: "🧱", title: "Moje tréninky", desc: "Skládej vlastní tréninky z bloků", cta: "Otevřít" },
   { href: "/balicky", icon: "📦", title: "Balíčky", desc: "Programy na míru → do kalendáře", cta: "Procházet" },
   { href: "/oddily", icon: "👥", title: "Oddíly", desc: "Skupiny, rozvrh a termíny tréninků", cta: "Otevřít" },
+  { href: "/cviky", icon: "📚", title: "Katalog cviků", desc: "Sdílený číselník cviků dle sportu", cta: "Otevřít" },
 ];
 
 export default async function DashboardPage() {
@@ -61,15 +62,6 @@ export default async function DashboardPage() {
               </Link>
             ),
           )}
-        </div>
-
-        <div className="mt-6">
-          <Link
-            href="/cviky"
-            className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100"
-          >
-            📚 Katalog cviků
-          </Link>
         </div>
       </section>
     </main>
