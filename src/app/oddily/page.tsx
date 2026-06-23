@@ -133,7 +133,7 @@ export default async function ClubsPage({
           ) : (
             <ul className="mt-4 space-y-3">
               {publicClubs.map((c) => (
-                <li key={c.id} className="flex items-center gap-4 rounded-2xl border border-zinc-200 bg-white p-4">
+                <li key={c.id} className="flex flex-wrap items-center gap-4 rounded-2xl border border-zinc-200 bg-white p-4">
                   <ClubLogo url={c.logoUrl} />
                   <div className="min-w-0 flex-1">
                     <h3 className="truncate text-lg font-medium text-zinc-900">{c.name}</h3>
@@ -141,7 +141,7 @@ export default async function ClubsPage({
                       {c._count.members} členů{c.address ? ` · ${c.address}` : ""}
                     </p>
                   </div>
-                  <div className="flex shrink-0 items-center gap-2">
+                  <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
                     <Link href={`/oddily/${c.id}`} className="rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100">Detail</Link>
                     <form action={joinClub.bind(null, c.id)}>
                       <button className="rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-zinc-800">Připojit se</button>

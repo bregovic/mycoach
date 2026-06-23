@@ -170,10 +170,10 @@ export function ClubView({ club }: { club: ClubDTO }) {
                 </button>
               ))}
             </div>
-            <div className="flex items-center gap-2">
-              <input name="start" type="time" defaultValue="07:00" className={input} />
+            <div className="flex flex-wrap items-center gap-2">
+              <input name="start" type="time" defaultValue="07:00" className={`${input} w-28`} />
               <span className="text-zinc-400">–</span>
-              <input name="end" type="time" defaultValue="08:00" className={input} />
+              <input name="end" type="time" defaultValue="08:00" className={`${input} w-28`} />
               <button type="submit" disabled={days.size === 0} className="ml-auto rounded-lg bg-zinc-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:opacity-40">Přidat</button>
             </div>
           </form>
