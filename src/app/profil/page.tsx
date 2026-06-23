@@ -9,6 +9,7 @@ import { calcAge, calcBmi, bmiCategory, type BmiTone } from "@/lib/health";
 import { AppHeader } from "@/components/app-header";
 import { AvatarUploader } from "@/components/avatar-uploader";
 import { SoundSettings } from "@/components/sound-settings";
+import { AccountSettings } from "@/components/account-settings";
 
 export const metadata = { title: "Profil" };
 
@@ -165,11 +166,22 @@ export default async function ProfilePage() {
           <ProfileForm values={values} />
         </div>
 
-        {/* Zvukové pokyny */}
+        {/* Účet */}
         <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6">
-          <h2 className="mb-4 text-base font-semibold text-zinc-900">Zvukové pokyny (MP3)</h2>
-          <SoundSettings byType={soundsByType} />
+          <h2 className="mb-4 text-base font-semibold text-zinc-900">Účet</h2>
+          <AccountSettings name={user?.name ?? ""} email={user?.email ?? ""} />
         </div>
+
+        {/* Zvukové pokyny (rozbalovací) */}
+        <details className="group mt-6 rounded-2xl border border-zinc-200 bg-white p-6">
+          <summary className="flex cursor-pointer list-none items-center justify-between text-base font-semibold text-zinc-900">
+            Zvukové pokyny (MP3)
+            <span className="text-sm font-normal text-zinc-400 transition group-open:rotate-180">▾</span>
+          </summary>
+          <div className="mt-4">
+            <SoundSettings byType={soundsByType} />
+          </div>
+        </details>
       </section>
     </main>
   );
