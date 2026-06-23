@@ -145,7 +145,9 @@ Engine je **sport-agnostický** — box je jen první „disciplína" (dataset).
     (`Package`/`PackageElement`) s kategorií, tagy, autorem, free/placené; uživatel si dá **odběr**
     (`Subscription`/`SubscriptionElement`), zapne/vypne prvky + upraví **frekvenci** → potvrzení
     vygeneruje **Activity + intervalový `ActivitySchedule`** do kalendáře; zrušení odběru je smaže.
-    Hotovo procházení/hledání + odběr; ⏭ autorský editor balíčků, ⏭ placené (Stripe).
+    Hotovo: procházení/hledání, odběr, **autorský editor** (`/balicky/[slug]/upravit`, jen vlastník),
+    **lookup** – uživatel si přidává další prvky z katalogu `ElementPreset` (per-user, mimo šablonu).
+    ⏭ placené (Stripe).
 12. ⏭ **Plány zdarma (trénink)**: trenér/admin složí tréninkový plán, uživatel si ho „nasadí"
     (`Enrollment`). Pozn.: časem nejspíš sjednotit s `Package` jako jeden „subscribable bundle".
 
