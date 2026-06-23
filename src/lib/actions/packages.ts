@@ -1,10 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { dateKey, keyToDate } from "@/lib/calendar";
 import { ensureScheduleTasks } from "@/lib/calendar-tasks";
+import { CATEGORY_LABELS } from "@/lib/packages";
 
 async function requireUserId(): Promise<string> {
   const session = await auth();
@@ -119,4 +121,183 @@ export async function unsubscribePackage(packageId: string): Promise<void> {
   await teardownSubscription(userId, packageId);
   revalidatePath("/balicky");
   revalidatePath("/kalendar");
+}
+
+// ===========================================================================
+// Autorská tvorba balíčků
+// ===========================================================================
+
+const str = (v: unknown, max: number): string => String(v ?? "").trim().slice(0, max);
+const clampInt = (v: unknown, min: number, max: number, fallback: number): number => {
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
+};
+
+function slugify(input: string): string {
+  const base = input
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 50);
+  return base || "balicek";
+}
+
+async function uniqueSlug(base: string, excludeId?: string): Promise<string> {
+  let slug = base;
+  let i = 1;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const hit = await prisma.package.findFirst({
+      where: { slug, ...(excludeId ? { NOT: { id: excludeId } } : {}) },
+      select: { id: true },
+    });
+    if (!hit) return slug;
+    i += 1;
+    slug = `${base}-${i}`;
+  }
+}
+
+export async function createPackage(): Promise<void> {
+  const userId = await requireUserId();
+  const slug = await uniqueSlug(`balicek-${Date.now().toString(36)}`);
+  const pkg = await prisma.package.create({
+    data: { slug, title: "Nový balíček", authorId: userId, category: "krasa", published: false },
+    select: { slug: true },
+  });
+  redirect(`/balicky/${pkg.slug}/upravit`);
+}
+
+export async function updatePackageMeta(input: {
+  id: string;
+  title: string;
+  subtitle?: string;
+  description?: string;
+  category?: string;
+  tags: string[];
+  icon?: string;
+  color: string;
+  isFree: boolean;
+  priceCzk?: number;
+  published: boolean;
+}): Promise<void> {
+  const userId = await requireUserId();
+  const owned = await prisma.package.findFirst({
+    where: { id: input.id, authorId: userId },
+    select: { id: true, title: true },
+  });
+  if (!owned) return;
+
+  const title = str(input.title, 80) || "Bez názvu";
+  const category =
+    input.category && Object.keys(CATEGORY_LABELS).includes(input.category) ? input.category : null;
+  const tags = [...new Set(input.tags.map((t) => str(t, 30).toLowerCase()).filter(Boolean))].slice(0, 12);
+  const isFree = Boolean(input.isFree);
+  const priceCents = isFree ? null : clampInt((input.priceCzk ?? 0) * 100, 0, 100_000_00, 0) || null;
+
+  const newSlug = await uniqueSlug(slugify(title), input.id);
+
+  await prisma.package.update({
+    where: { id: input.id },
+    data: {
+      title,
+      slug: newSlug,
+      subtitle: str(input.subtitle, 120) || null,
+      description: str(input.description, 2000) || null,
+      category,
+      tags,
+      icon: str(input.icon, 8) || null,
+      color: HEX.test(input.color) ? input.color : "#18181b",
+      isFree,
+      priceCents,
+      published: Boolean(input.published),
+    },
+  });
+  revalidatePath("/balicky");
+  redirect(`/balicky/${newSlug}/upravit`);
+}
+
+export async function deletePackage(id: string): Promise<void> {
+  const userId = await requireUserId();
+  await prisma.package.deleteMany({ where: { id, authorId: userId } });
+  revalidatePath("/balicky");
+  redirect("/balicky");
+}
+
+export async function addPackageElement(packageId: string): Promise<void> {
+  const userId = await requireUserId();
+  const pkg = await prisma.package.findFirst({
+    where: { id: packageId, authorId: userId },
+    select: { id: true, color: true },
+  });
+  if (!pkg) return;
+  const count = await prisma.packageElement.count({ where: { packageId } });
+  await prisma.packageElement.create({
+    data: {
+      packageId,
+      order: count,
+      name: "Nový prvek",
+      color: pkg.color,
+      defaultIntervalDays: 28,
+      optional: true,
+    },
+  });
+  revalidatePath("/balicky");
+}
+
+export async function updatePackageElement(input: {
+  id: string;
+  name: string;
+  note?: string;
+  color: string;
+  defaultIntervalDays: number;
+  optional: boolean;
+}): Promise<void> {
+  const userId = await requireUserId();
+  const el = await prisma.packageElement.findFirst({
+    where: { id: input.id, package: { authorId: userId } },
+    select: { id: true },
+  });
+  if (!el) return;
+  await prisma.packageElement.update({
+    where: { id: input.id },
+    data: {
+      name: str(input.name, 60) || "Prvek",
+      note: str(input.note, 200) || null,
+      color: HEX.test(input.color) ? input.color : "#18181b",
+      defaultIntervalDays: clampInt(input.defaultIntervalDays, 1, 365, 28),
+      optional: Boolean(input.optional),
+    },
+  });
+  revalidatePath("/balicky");
+}
+
+export async function deletePackageElement(id: string): Promise<void> {
+  const userId = await requireUserId();
+  await prisma.packageElement.deleteMany({ where: { id, package: { authorId: userId } } });
+  revalidatePath("/balicky");
+}
+
+export async function movePackageElement(id: string, dir: "up" | "down"): Promise<void> {
+  const userId = await requireUserId();
+  const el = await prisma.packageElement.findFirst({
+    where: { id, package: { authorId: userId } },
+    select: { id: true, order: true, packageId: true },
+  });
+  if (!el) return;
+  const neighbor = await prisma.packageElement.findFirst({
+    where:
+      dir === "up"
+        ? { packageId: el.packageId, order: { lt: el.order } }
+        : { packageId: el.packageId, order: { gt: el.order } },
+    orderBy: { order: dir === "up" ? "desc" : "asc" },
+    select: { id: true, order: true },
+  });
+  if (!neighbor) return;
+  await prisma.$transaction([
+    prisma.packageElement.update({ where: { id: el.id }, data: { order: neighbor.order } }),
+    prisma.packageElement.update({ where: { id: neighbor.id }, data: { order: el.order } }),
+  ]);
+  revalidatePath("/balicky");
 }

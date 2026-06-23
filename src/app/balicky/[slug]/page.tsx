@@ -61,9 +61,19 @@ export default async function PackageDetailPage({
         <Link href="/dashboard">
           <Brand />
         </Link>
-        <Link href="/balicky" className="text-sm text-zinc-500 transition hover:text-zinc-900">
-          ← Balíčky
-        </Link>
+        <div className="flex items-center gap-4">
+          {pkg.authorId === userId && (
+            <Link
+              href={`/balicky/${pkg.slug}/upravit`}
+              className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100"
+            >
+              Upravit
+            </Link>
+          )}
+          <Link href="/balicky" className="text-sm text-zinc-500 transition hover:text-zinc-900">
+            ← Balíčky
+          </Link>
+        </div>
       </header>
 
       <section className="mx-auto max-w-2xl px-6 py-12">

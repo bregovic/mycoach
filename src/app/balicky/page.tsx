@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Brand } from "@/components/brand";
 import { CATEGORY_LABELS } from "@/lib/packages";
+import { createPackage } from "@/lib/actions/packages";
 
 export const metadata = { title: "Balíčky" };
 
@@ -55,11 +56,23 @@ export default async function PackagesPage({
       </header>
 
       <section className="mx-auto max-w-4xl px-6 py-12">
-        <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">Balíčky</h1>
-        <p className="mt-1 text-zinc-500">
-          Hotové programy, na které se přihlásíš a přizpůsobíš si je. Po potvrzení se zařadí do
-          kalendáře.
-        </p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">Balíčky</h1>
+            <p className="mt-1 text-zinc-500">
+              Hotové programy, na které se přihlásíš a přizpůsobíš si je. Po potvrzení se zařadí do
+              kalendáře.
+            </p>
+          </div>
+          <form action={createPackage}>
+            <button
+              type="submit"
+              className="shrink-0 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800"
+            >
+              + Vytvořit
+            </button>
+          </form>
+        </div>
 
         {/* Hledání */}
         <form className="mt-6 flex gap-2" action="/balicky">
