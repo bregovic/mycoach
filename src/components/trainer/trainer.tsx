@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import s from "./trainer.module.css";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Brand } from "@/components/brand";
 import { BOX_DRILLS, drillCount } from "@/lib/trainer/drills";
 import { formatTime, generateWorkout, phaseLabel, workoutTotals } from "@/lib/trainer/generate";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/trainer/types";
@@ -11,14 +11,39 @@ import { logCompletedWorkout } from "@/lib/actions/trainings";
 import { useAudio } from "./use-audio";
 import { useSpeech } from "./use-speech";
 
-const stateClass = (k: Segment["kind"]) =>
-  k === "work" ? s.work : k === "rest" ? s.rest : k === "prepare" ? s.prepare : s.finish;
+const card = "rounded-2xl border border-zinc-200 bg-white p-6";
+const inputCls =
+  "w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-zinc-500";
+
+// Barevné ladění karty časovače podle typu úseku.
+const STATE: Record<Segment["kind"], { ring: string; bar: string; text: string; tag: string }> = {
+  work: { ring: "ring-red-300", bar: "bg-red-500", text: "text-red-600", tag: "bg-red-50 text-red-700" },
+  rest: { ring: "ring-emerald-300", bar: "bg-emerald-500", text: "text-emerald-600", tag: "bg-emerald-50 text-emerald-700" },
+  prepare: { ring: "ring-amber-300", bar: "bg-amber-500", text: "text-amber-600", tag: "bg-amber-50 text-amber-700" },
+  finish: { ring: "ring-amber-300", bar: "bg-amber-500", text: "text-amber-600", tag: "bg-amber-50 text-amber-700" },
+};
 
 /** Předpřipravený (autorovaný) trénink k přehrání místo procedurálního generování. */
 export interface TrainerPreset {
   title: string;
   sportSlug?: string | null;
   segments: Segment[];
+}
+
+function Shell({ right, children }: { right: ReactNode; children: ReactNode }) {
+  return (
+    <main className="min-h-dvh bg-gradient-to-b from-zinc-50 to-zinc-100/40">
+      <header className="sticky top-0 z-20 border-b border-zinc-200/80 bg-white/70 backdrop-blur-md">
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 sm:px-6">
+          <Link href="/dashboard" className="transition hover:opacity-80">
+            <Brand />
+          </Link>
+          {right}
+        </div>
+      </header>
+      <section className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10">{children}</section>
+    </main>
+  );
 }
 
 export function Trainer({
@@ -237,181 +262,115 @@ export function Trainer({
 
   const anyPhase = CATEGORY_ORDER.some((k) => phases[k]);
 
+  // Sdílená karta „Hlas a zvuk" pro obě setup obrazovky.
+  const voicePanel = (intro: ReactNode) => (
+    <section className={card}>
+      <h2 className="text-lg font-semibold text-zinc-900">Hlas a zvuk</h2>
+      {speech.supported ? (
+        <div className="mt-4 space-y-4">
+          <div>
+            <label className="text-xs font-medium uppercase tracking-wide text-zinc-500">Hlas (čeština)</label>
+            <select className={`${inputCls} mt-1`} value={speech.voiceURI ?? ""} onChange={(e) => speech.setVoiceURI(e.target.value)}>
+              {speech.voices.map((v) => (
+                <option key={v.voiceURI} value={v.voiceURI}>
+                  {v.name} ({v.lang})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wide text-zinc-500">
+              <span>Rychlost hlasu</span>
+              <span className="text-zinc-700">{speech.rate.toFixed(2)}×</span>
+            </div>
+            <input className="mt-1 w-full accent-zinc-900" type="range" min={0.6} max={1.3} step={0.05} value={speech.rate} onChange={(e) => speech.setRate(Number(e.target.value))} />
+          </div>
+          <button
+            className="rounded-lg border border-zinc-300 px-3 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100"
+            onClick={() => speech.speak("Hlasový trenér je připraven.")}
+          >
+            🔊 Vyzkoušet hlas
+          </button>
+        </div>
+      ) : (
+        <p className="mt-3 text-sm text-zinc-500">Tvůj prohlížeč nepodporuje hlasovou syntézu.</p>
+      )}
+      <p className="mt-5 text-sm text-zinc-500">{intro}</p>
+    </section>
+  );
+
   // ---------------- SETUP (autorovaný trénink) ----------------
   if (!started && preset) {
     const pt = workoutTotals(preset.segments);
     return (
-      <div className={s.wrap}>
-        <div className={s.inner}>
-          <header className={s.header}>
-            <span className={s.logo}>
-              My<b>Coach</b> · Trénink
-            </span>
-            <Link href="/treninky" className={s.back}>
-              ← Moje tréninky
-            </Link>
-          </header>
-
-          <div className={s.grid}>
-            <section className={s.card}>
-              <h2 className={s.h2}>{preset.title}</h2>
-              <p className={s.sub}>
-                {preset.sportSlug ? `${preset.sportSlug} · ` : ""}
-                {pt.rounds} kol · práce {formatTime(pt.workSec)}
-              </p>
-              <div className={s.tlTotals} style={{ marginTop: "1rem" }}>
-                <span>
-                  Celkem <b>{formatTime(pt.totalSec)}</b>
-                </span>
-                <span>
-                  Práce <b>{formatTime(pt.workSec)}</b>
-                </span>
-                <span>
-                  Kol <b>{pt.rounds}</b>
-                </span>
-              </div>
-              <button
-                className={`${s.btn} ${s.btnPrimary}`}
-                style={{ marginTop: "1.25rem" }}
-                onClick={start}
-                disabled={pt.rounds === 0}
-              >
-                ▶ Spustit trénink
-              </button>
-            </section>
-
-            <section className={s.card}>
-              <h2 className={s.h2}>Hlas a zvuk</h2>
-              {speech.supported ? (
-                <>
-                  <div className={s.field}>
-                    <div className={s.label}>
-                      <span>Hlas (čeština)</span>
-                    </div>
-                    <select
-                      className={s.select}
-                      value={speech.voiceURI ?? ""}
-                      onChange={(e) => speech.setVoiceURI(e.target.value)}
-                    >
-                      {speech.voices.map((v) => (
-                        <option key={v.voiceURI} value={v.voiceURI}>
-                          {v.name} ({v.lang})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className={s.field}>
-                    <div className={s.label}>
-                      <span>Rychlost hlasu</span>
-                      <b>{speech.rate.toFixed(2)}×</b>
-                    </div>
-                    <input
-                      className={s.range}
-                      type="range"
-                      min={0.6}
-                      max={1.3}
-                      step={0.05}
-                      value={speech.rate}
-                      onChange={(e) => speech.setRate(Number(e.target.value))}
-                    />
-                  </div>
-                  <button
-                    className={s.btn}
-                    onClick={() => speech.speak("Hlasový trenér je připraven.")}
-                  >
-                    🔊 Vyzkoušet hlas
-                  </button>
-                </>
-              ) : (
-                <p className={s.sub}>Tvůj prohlížeč nepodporuje hlasovou syntézu.</p>
-              )}
-              <p className={s.next} style={{ marginTop: "1.25rem" }}>
-                Ahoj <b>{userName}</b>. Tohle je tvůj vlastní trénink — systém tě hlasem provede koly
-                i pauzami. Po dokončení se uloží do historie.
-              </p>
-            </section>
-          </div>
+      <Shell
+        right={
+          <Link href="/treninky" className="text-sm text-zinc-500 transition hover:text-zinc-900">
+            ← Moje tréninky
+          </Link>
+        }
+      >
+        <div className="grid gap-5 lg:grid-cols-2">
+          <section className={card}>
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">{preset.title}</h1>
+            <p className="mt-1 text-sm text-zinc-500">
+              {preset.sportSlug ? `${preset.sportSlug} · ` : ""}
+              {pt.rounds} kol · práce {formatTime(pt.workSec)}
+            </p>
+            <div className="mt-4 grid grid-cols-3 gap-3 text-center">
+              <Stat label="Celkem" value={formatTime(pt.totalSec)} />
+              <Stat label="Práce" value={formatTime(pt.workSec)} />
+              <Stat label="Kol" value={String(pt.rounds)} />
+            </div>
+            <button
+              className="mt-6 w-full rounded-xl bg-zinc-900 px-5 py-3 text-base font-medium text-white transition hover:bg-zinc-800 disabled:opacity-40"
+              onClick={start}
+              disabled={pt.rounds === 0}
+            >
+              ▶ Spustit trénink
+            </button>
+          </section>
+          {voicePanel(
+            <>
+              Ahoj <b>{userName}</b>. Tohle je tvůj vlastní trénink — systém tě hlasem (nebo tvými MP3) provede koly i
+              pauzami. Po dokončení se uloží do historie.
+            </>,
+          )}
         </div>
-      </div>
+      </Shell>
     );
   }
 
   // ---------------- SETUP (procedurální generátor) ----------------
   if (!started) {
     return (
-      <div className={s.wrap}>
-        <div className={s.inner}>
-          <header className={s.header}>
-            <span className={s.logo}>
-              My<b>Coach</b> · Trénink
-            </span>
-            <Link href="/dashboard" className={s.back}>
-              ← Dashboard
-            </Link>
-          </header>
+      <Shell
+        right={
+          <Link href="/dashboard" className="text-sm text-zinc-500 transition hover:text-zinc-900">
+            ← Přehled
+          </Link>
+        }
+      >
+        <div className="grid gap-5 lg:grid-cols-2">
+          <section className={card}>
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Sestavení tréninku</h1>
 
-          <div className={s.grid}>
-            <section className={s.card}>
-              <h2 className={s.h2}>Sestavení tréninku</h2>
+            <div className="mt-5 space-y-5">
+              <Slider label="Počet cvičících" value={`${participants}`} min={1} max={6} step={1} v={participants} onChange={setParticipants} />
+              <Slider label="Délka tréninku" value={`${durationMin} min`} min={10} max={90} step={5} v={durationMin} onChange={setDurationMin} />
+              <Slider label="Pauza mezi koly" value={`${restSec} s`} min={10} max={45} step={5} v={restSec} onChange={setRestSec} />
 
-              <div className={s.field}>
-                <div className={s.label}>
-                  <span>Počet cvičících</span>
-                  <b>{participants}</b>
-                </div>
-                <input
-                  className={s.range}
-                  type="range"
-                  min={1}
-                  max={6}
-                  value={participants}
-                  onChange={(e) => setParticipants(Number(e.target.value))}
-                />
-              </div>
-
-              <div className={s.field}>
-                <div className={s.label}>
-                  <span>Délka tréninku</span>
-                  <b>{durationMin} min</b>
-                </div>
-                <input
-                  className={s.range}
-                  type="range"
-                  min={10}
-                  max={90}
-                  step={5}
-                  value={durationMin}
-                  onChange={(e) => setDurationMin(Number(e.target.value))}
-                />
-              </div>
-
-              <div className={s.field}>
-                <div className={s.label}>
-                  <span>Pauza mezi koly</span>
-                  <b>{restSec} s</b>
-                </div>
-                <input
-                  className={s.range}
-                  type="range"
-                  min={10}
-                  max={45}
-                  step={5}
-                  value={restSec}
-                  onChange={(e) => setRestSec(Number(e.target.value))}
-                />
-              </div>
-
-              <div className={s.field}>
-                <div className={s.label}>
-                  <span>Fáze tréninku</span>
-                </div>
-                <div className={s.chips}>
+              <div>
+                <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">Fáze tréninku</span>
+                <div className="mt-2 flex flex-wrap gap-2">
                   {CATEGORY_ORDER.map((k) => (
                     <button
                       key={k}
                       type="button"
-                      className={`${s.chip} ${phases[k] ? s.chipOn : ""}`}
                       onClick={() => setPhases((p) => ({ ...p, [k]: !p[k] }))}
+                      className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
+                        phases[k] ? "bg-zinc-900 text-white" : "border border-zinc-300 text-zinc-600 hover:bg-zinc-100"
+                      }`}
                     >
                       {CATEGORY_LABELS[k]} ({counts[k]})
                     </button>
@@ -420,15 +379,13 @@ export function Trainer({
               </div>
 
               {participants > 1 && (
-                <div className={s.field}>
-                  <div className={s.label}>
-                    <span>Jména cvičících (volitelné)</span>
-                  </div>
-                  <div className={s.names}>
+                <div>
+                  <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">Jména cvičících (volitelné)</span>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
                     {Array.from({ length: participants }).map((_, i) => (
                       <input
                         key={i}
-                        className={s.input}
+                        className={inputCls}
                         placeholder={`Cvičící ${i + 1}`}
                         value={names[i]}
                         onChange={(e) =>
@@ -444,176 +401,186 @@ export function Trainer({
                 </div>
               )}
 
-              <button className={`${s.btn} ${s.btnPrimary}`} onClick={start} disabled={!anyPhase}>
+              <button
+                className="w-full rounded-xl bg-zinc-900 px-5 py-3 text-base font-medium text-white transition hover:bg-zinc-800 disabled:opacity-40"
+                onClick={start}
+                disabled={!anyPhase}
+              >
                 ▶ Sestavit a spustit
               </button>
-            </section>
+            </div>
+          </section>
 
-            <section className={s.card}>
-              <h2 className={s.h2}>Hlas a zvuk</h2>
-              {speech.supported ? (
-                <>
-                  <div className={s.field}>
-                    <div className={s.label}>
-                      <span>Hlas (čeština)</span>
-                    </div>
-                    <select
-                      className={s.select}
-                      value={speech.voiceURI ?? ""}
-                      onChange={(e) => speech.setVoiceURI(e.target.value)}
-                    >
-                      {speech.voices.map((v) => (
-                        <option key={v.voiceURI} value={v.voiceURI}>
-                          {v.name} ({v.lang})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className={s.field}>
-                    <div className={s.label}>
-                      <span>Rychlost hlasu</span>
-                      <b>{speech.rate.toFixed(2)}×</b>
-                    </div>
-                    <input
-                      className={s.range}
-                      type="range"
-                      min={0.6}
-                      max={1.3}
-                      step={0.05}
-                      value={speech.rate}
-                      onChange={(e) => speech.setRate(Number(e.target.value))}
-                    />
-                  </div>
-                  <button
-                    className={s.btn}
-                    onClick={() => speech.speak("Hlasový trenér je připraven.")}
-                  >
-                    🔊 Vyzkoušet hlas
-                  </button>
-                </>
-              ) : (
-                <p className={s.sub}>Tvůj prohlížeč nepodporuje hlasovou syntézu.</p>
-              )}
-              <p className={s.next} style={{ marginTop: "1.25rem" }}>
-                Ahoj <b>{userName}</b>. Vyber parametry a spusť trénink — systém tě hlasem provede
-                koly, pauzami i rolemi. Zatím obsahuje disciplínu <b>Box</b> ({" "}
-                {CATEGORY_ORDER.reduce((a, k) => a + counts[k], 0)} cviků).
-              </p>
-            </section>
-          </div>
+          {voicePanel(
+            <>
+              Ahoj <b>{userName}</b>. Vyber parametry a spusť trénink — systém tě hlasem provede koly, pauzami i rolemi.
+              Zatím obsahuje disciplínu <b>Box</b> ({CATEGORY_ORDER.reduce((a, k) => a + counts[k], 0)} cviků).
+            </>,
+          )}
         </div>
-      </div>
+      </Shell>
     );
   }
 
   // ---------------- RUNNING ----------------
   const pct = seg ? Math.max(0, (timeLeft / seg.duration) * 100) : 0;
+  const st = seg ? STATE[seg.kind] : STATE.prepare;
   return (
-    <div className={s.wrap}>
-      <div className={s.inner}>
-        <header className={s.header}>
-          <span className={s.logo}>
-            My<b>Coach</b> · Trénink
-          </span>
-          <button className={s.back} onClick={reset}>
-            ✕ Ukončit
-          </button>
-        </header>
+    <Shell
+      right={
+        <button className="text-sm text-zinc-500 transition hover:text-zinc-900" onClick={reset}>
+          ✕ Ukončit
+        </button>
+      }
+    >
+      <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+        {/* Časovač */}
+        <section className={`rounded-2xl border border-zinc-200 bg-white p-6 text-center shadow-sm ring-2 ${st.ring} transition`}>
+          <div className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${st.tag}`}>
+            {seg && phaseLabel(seg)}
+            {seg?.kind === "work" && seg.roundNum ? ` · kolo ${seg.roundNum}/${seg.totalRoundsInPhase}` : ""}
+          </div>
+          <div className={`mt-2 font-bold tabular-nums tracking-tight ${st.text} text-[clamp(4.5rem,20vw,8rem)] leading-none`}>
+            {formatTime(timeLeft)}
+          </div>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-100">
+            <div className={`h-full ${st.bar} transition-[width] duration-1000 ease-linear`} style={{ width: `${pct}%` }} />
+          </div>
+          <div className="mt-4 text-xl font-semibold text-zinc-900">{seg?.name}</div>
+          {seg?.voiceText && seg.kind === "work" && <div className="mt-1 text-sm text-zinc-500">{seg.voiceText}</div>}
+          {seg?.roles && (
+            <div className="mt-3 inline-block rounded-lg border border-dashed border-amber-400 px-3 py-1.5 text-sm text-amber-700">
+              {seg.roles}
+            </div>
+          )}
+          {seg?.nextName && (
+            <div className="mt-3 text-sm text-zinc-400">
+              Následuje: <b className="text-zinc-600">{seg.nextName}</b>
+            </div>
+          )}
 
-        <div className={`${s.grid} ${s.gridRun}`}>
-          <section className={`${s.card} ${s.timer} ${seg ? stateClass(seg.kind) : ""}`}>
-            <div className={s.phaseTag}>
-              {seg && phaseLabel(seg)}
-              {seg?.kind === "work" && seg.roundNum
-                ? ` · kolo ${seg.roundNum}/${seg.totalRoundsInPhase}`
-                : ""}
-            </div>
-            <div className={s.time}>{formatTime(timeLeft)}</div>
-            <div className={s.bar}>
-              <div className={s.barFill} style={{ width: `${pct}%` }} />
-            </div>
-            <div className={s.name}>{seg?.name}</div>
-            {seg?.voiceText && seg.kind === "work" && <div className={s.sub}>{seg.voiceText}</div>}
-            {seg?.roles && <div className={s.roles}>{seg.roles}</div>}
-            {seg?.nextName && (
-              <div className={s.next}>
-                Následuje: <b>{seg.nextName}</b>
+          <div className="mt-6 flex items-center justify-center gap-3">
+            <CtrlButton title="Zopakovat pokyn" onClick={() => seg && announce(seg)} className="h-14 w-14 border border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100">
+              ↻
+            </CtrlButton>
+            <CtrlButton title={running ? "Pauza" : "Spustit"} onClick={togglePlay} className="h-20 w-20 bg-zinc-900 text-2xl text-white hover:bg-zinc-800">
+              {running ? "❚❚" : "▶"}
+            </CtrlButton>
+            <CtrlButton title="Přeskočit" onClick={() => goTo(index + 1)} className="h-14 w-14 border border-zinc-300 text-zinc-700 hover:bg-zinc-100">
+              ⏭
+            </CtrlButton>
+            <CtrlButton title="Ukončit" onClick={reset} className="h-14 w-14 border border-red-300 bg-red-50 text-red-600 hover:bg-red-100">
+              ⏹
+            </CtrlButton>
+          </div>
+
+          {speech.supported && (
+            <button className="mt-4 text-sm text-zinc-400 transition hover:text-zinc-700" onClick={() => speech.setMuted(!speech.muted)}>
+              {speech.muted ? "🔇 Hlas ztišený (zapnout)" : "🔊 Hlas zapnutý (ztišit)"}
+            </button>
+          )}
+        </section>
+
+        {/* Plán */}
+        <section className={card}>
+          <h2 className="text-lg font-semibold text-zinc-900">Plán</h2>
+          <div className="mt-2 flex gap-4 text-sm text-zinc-500">
+            <span>Celkem <b className="text-zinc-800">{formatTime(totals.totalSec)}</b></span>
+            <span>Práce <b className="text-zinc-800">{formatTime(totals.workSec)}</b></span>
+            <span>Kol <b className="text-zinc-800">{totals.rounds}</b></span>
+          </div>
+          <div className="mt-3 max-h-[60vh] space-y-1.5 overflow-y-auto pr-1">
+            {segments.map((sg, i) => (
+              <div
+                key={i}
+                ref={i === index ? activeSegRef : undefined}
+                className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm transition ${
+                  i === index
+                    ? "border-zinc-900 bg-zinc-900/[0.04] font-medium text-zinc-900"
+                    : i < index
+                      ? "border-zinc-100 text-zinc-400"
+                      : sg.kind !== "work"
+                        ? "border-zinc-100 bg-zinc-50 text-zinc-500"
+                        : "border-zinc-200 text-zinc-700"
+                }`}
+              >
+                <span className="min-w-0 truncate">
+                  {sg.kind === "work" ? `${phaseLabel(sg)}: ${sg.spokenName}` : phaseLabel(sg)}
+                </span>
+                <small className="shrink-0 tabular-nums text-zinc-400">{formatTime(sg.duration)}</small>
               </div>
-            )}
-
-            <div className={s.controls}>
-              <button
-                className={`${s.btn} ${s.round} ${s.warn}`}
-                title="Zopakovat pokyn"
-                onClick={() => seg && announce(seg)}
-              >
-                ↻
-              </button>
-              <button
-                className={`${s.btn} ${s.round} ${s.roundBig} ${s.go}`}
-                title={running ? "Pauza" : "Spustit"}
-                onClick={togglePlay}
-              >
-                {running ? "❚❚" : "▶"}
-              </button>
-              <button
-                className={`${s.btn} ${s.round}`}
-                title="Přeskočit"
-                onClick={() => goTo(index + 1)}
-              >
-                ⏭
-              </button>
-              <button
-                className={`${s.btn} ${s.round} ${s.danger}`}
-                title="Ukončit"
-                onClick={reset}
-              >
-                ⏹
-              </button>
-            </div>
-            {speech.supported && (
-              <button
-                className={s.next}
-                style={{ marginTop: "0.9rem", background: "none", border: "none", cursor: "pointer" }}
-                onClick={() => speech.setMuted(!speech.muted)}
-              >
-                {speech.muted ? "🔇 Hlas ztišený (zapnout)" : "🔊 Hlas zapnutý (ztišit)"}
-              </button>
-            )}
-          </section>
-
-          <section className={s.card}>
-            <h2 className={s.h2}>Plán</h2>
-            <div className={s.tlTotals}>
-              <span>
-                Celkem <b>{formatTime(totals.totalSec)}</b>
-              </span>
-              <span>
-                Práce <b>{formatTime(totals.workSec)}</b>
-              </span>
-              <span>
-                Kol <b>{totals.rounds}</b>
-              </span>
-            </div>
-            <div className={s.tl}>
-              {segments.map((sg, i) => (
-                <div
-                  key={i}
-                  ref={i === index ? activeSegRef : undefined}
-                  className={`${s.seg} ${i < index ? s.segDone : ""} ${
-                    i === index ? s.segActive : ""
-                  } ${sg.kind !== "work" ? s.segRest : ""}`}
-                >
-                  <span>
-                    {sg.kind === "work" ? `${phaseLabel(sg)}: ${sg.spokenName}` : phaseLabel(sg)}
-                  </span>
-                  <small>{formatTime(sg.duration)}</small>
-                </div>
-              ))}
-            </div>
-          </section>
-        </div>
+            ))}
+          </div>
+        </section>
       </div>
+    </Shell>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
+      <div className="text-xs font-medium uppercase tracking-wide text-zinc-400">{label}</div>
+      <div className="mt-0.5 text-lg font-semibold tabular-nums text-zinc-900">{value}</div>
     </div>
+  );
+}
+
+function Slider({
+  label,
+  value,
+  min,
+  max,
+  step,
+  v,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  min: number;
+  max: number;
+  step: number;
+  v: number;
+  onChange: (n: number) => void;
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wide text-zinc-500">
+        <span>{label}</span>
+        <span className="text-zinc-700">{value}</span>
+      </div>
+      <input
+        className="mt-1 w-full accent-zinc-900"
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={v}
+        onChange={(e) => onChange(Number(e.target.value))}
+      />
+    </div>
+  );
+}
+
+function CtrlButton({
+  children,
+  title,
+  onClick,
+  className,
+}: {
+  children: ReactNode;
+  title: string;
+  onClick: () => void;
+  className: string;
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      onClick={onClick}
+      className={`flex shrink-0 items-center justify-center rounded-full font-semibold transition ${className}`}
+    >
+      {children}
+    </button>
   );
 }
