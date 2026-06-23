@@ -203,6 +203,38 @@ export async function setBlockRest(blockId: string, exerciseId: string | null): 
   revalidate(block.trainingId);
 }
 
+/** Nahraje MP3 k aktivní pauze bloku (kondiční cvik). FormData: blockId + file. */
+export async function uploadBlockRestAudio(formData: FormData): Promise<void> {
+  const userId = await requireUserId();
+  const id = String(formData.get("blockId") ?? "");
+  const file = formData.get("file");
+  if (!(file instanceof File) || !id) return;
+  const block = await prisma.block.findFirst({
+    where: { id, training: { userId } },
+    select: { id: true, restAudioKey: true, trainingId: true },
+  });
+  if (!block) return;
+  const okType = file.type === "audio/mpeg" || file.name.toLowerCase().endsWith(".mp3");
+  if (!okType || file.size === 0 || file.size > 8 * 1024 * 1024) return;
+  const buf = Buffer.from(await file.arrayBuffer());
+  const key = await storage.save(buf, file.name || "pauza.mp3", ITEM_AUDIO_PREFIX);
+  if (block.restAudioKey) await storage.delete(block.restAudioKey);
+  await prisma.block.update({ where: { id }, data: { restAudioKey: key } });
+  revalidate(block.trainingId);
+}
+
+export async function removeBlockRestAudio(id: string): Promise<void> {
+  const userId = await requireUserId();
+  const block = await prisma.block.findFirst({
+    where: { id, training: { userId } },
+    select: { id: true, restAudioKey: true, trainingId: true },
+  });
+  if (!block) return;
+  if (block.restAudioKey) await storage.delete(block.restAudioKey);
+  await prisma.block.update({ where: { id }, data: { restAudioKey: null } });
+  revalidate(block.trainingId);
+}
+
 export async function deleteBlock(id: string): Promise<void> {
   const userId = await requireUserId();
   const block = await prisma.block.findFirst({

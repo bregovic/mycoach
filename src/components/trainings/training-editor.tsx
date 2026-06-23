@@ -12,8 +12,10 @@ import {
   deleteTraining,
   moveBlock,
   moveItem,
+  removeBlockRestAudio,
   setBlockRest,
   updateBlock,
+  uploadBlockRestAudio,
   updateItem,
   updateTrainingImage,
   updateTrainingMeta,
@@ -44,6 +46,7 @@ export interface BlockDTO {
   rounds: number;
   restSec: number;
   restName: string | null;
+  restAudioKey: string | null;
   items: ItemDTO[];
 }
 export interface TrainingDTO {
@@ -294,9 +297,10 @@ function BlockCard({
   const [newPrivate, setNewPrivate] = useState(false);
   const [restOpen, setRestOpen] = useState(false);
   const [restFilter, setRestFilter] = useState("");
+  const [searchFocus, setSearchFocus] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
   const restCandidates = sportExercises
-    .filter((e) => e.category === "conditioning" && e.name.toLowerCase().includes(restFilter.trim().toLowerCase()))
+    .filter((e) => e.name.toLowerCase().includes(restFilter.trim().toLowerCase()))
     .slice(0, 30);
 
   // Při výběru kategorie předvyplň název bloku (jen je-li prázdný/výchozí),
@@ -445,13 +449,13 @@ function BlockCard({
               autoFocus
               value={restFilter}
               onChange={(e) => setRestFilter(e.target.value)}
-              placeholder="Hledat kondiční cvik (kategorie Kondice)…"
+              placeholder="Hledat cvik do pauzy…"
               className={input}
             />
             {restFilter.trim() ? (
               <div className="mt-1 max-h-44 space-y-1 overflow-auto">
                 {restCandidates.length === 0 ? (
-                  <p className="px-1 py-2 text-xs text-zinc-400">Nic nenalezeno (zkus přidat cvik do kategorie Kondice).</p>
+                  <p className="px-1 py-2 text-xs text-zinc-400">Nic nenalezeno.</p>
                 ) : (
                   restCandidates.map((e) => (
                     <button
@@ -475,6 +479,36 @@ function BlockCard({
             )}
           </div>
         )}
+        {block.restName && (
+          <div className="mt-2 flex flex-wrap items-center gap-3 border-t border-zinc-200 pt-2">
+            <span className="text-xs text-zinc-500">MP3 pauzy:</span>
+            {block.restAudioKey ? (
+              <>
+                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                <audio controls src={`/api/exercise-audio?key=${encodeURIComponent(block.restAudioKey)}`} className="h-8 max-w-full" />
+                <button type="button" onClick={() => run(() => removeBlockRestAudio(block.id))} className="text-xs text-red-600 transition hover:text-red-700">Odebrat</button>
+              </>
+            ) : (
+              <label className="inline-flex cursor-pointer items-center rounded-lg border border-dashed border-zinc-300 px-2.5 py-1 text-xs font-medium text-zinc-600 transition hover:border-zinc-400 hover:bg-white">
+                + Nahrát MP3
+                <input
+                  type="file"
+                  accept="audio/mpeg,.mp3"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    e.target.value = "";
+                    if (!f) return;
+                    const fd = new FormData();
+                    fd.set("blockId", block.id);
+                    fd.set("file", f);
+                    run(() => uploadBlockRestAudio(fd));
+                  }}
+                />
+              </label>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Cviky v bloku */}
@@ -490,13 +524,13 @@ function BlockCard({
         {lookupOpen ? (
           <div className="rounded-lg border border-zinc-200 bg-zinc-50/60 p-3">
             <input
-              autoFocus
               value={filter}
+              onFocus={() => setSearchFocus(true)}
               onChange={(e) => setFilter(e.target.value)}
-              placeholder="Hledat cvik v číselníku…"
+              placeholder="Klikni a vyber, nebo začni psát…"
               className={input}
             />
-            {q ? (
+            {q || searchFocus ? (
               <div className="mt-2 max-h-56 space-y-1 overflow-auto">
                 {filtered.length === 0 ? (
                   <p className="px-1 py-2 text-sm text-zinc-400">Nic nenalezeno.</p>
@@ -525,7 +559,7 @@ function BlockCard({
                 )}
               </div>
             ) : (
-              <p className="mt-2 px-1 py-2 text-sm text-zinc-400">Začni psát název cviku…</p>
+              <p className="mt-2 px-1 py-2 text-sm text-zinc-400">Klikni do pole a vyber cvik, nebo začni psát…</p>
             )}
             {note && <p className="mt-1 text-xs text-amber-600">{note}</p>}
             {filter.trim() && (
@@ -544,7 +578,7 @@ function BlockCard({
               </div>
             )}
             <div className="mt-2 flex items-center justify-between">
-              <button type="button" onClick={() => { setLookupOpen(false); setFilter(""); setNote(null); }} className="text-xs text-zinc-500 transition hover:text-zinc-800">
+              <button type="button" onClick={() => { setLookupOpen(false); setFilter(""); setNote(null); setSearchFocus(false); }} className="text-xs text-zinc-500 transition hover:text-zinc-800">
                 Zavřít
               </button>
               <Link href="/cviky" className="text-xs font-medium text-zinc-500 transition hover:text-zinc-800">
