@@ -140,6 +140,7 @@ model Exercise {
   voiceText  String? // detailní pokyn (čte se v přehrávači)
   category   String? // warmup | combinations | bag_work | sparring | conditioning…
   coop       String? // najednou|stridave|v_pulce|cele_kolo
+  tags       String[] @default([]) // volné štítky pro vyhledávání
   defaultSec Int? // navržená délka úseku v sekundách
   ownerId    String? // kdo cvik zadal (null = systémový/seedovaný)
   isPrivate  Boolean  @default(false) // soukromé → nenabízí se veřejně

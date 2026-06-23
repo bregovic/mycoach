@@ -77,6 +77,7 @@ export interface ExerciseDTO {
   category: string | null;
   coop: string | null;
   defaultSec: number | null;
+  tags: string[];
   sportSlug: string;
   isPrivate: boolean;
   mine: boolean;
@@ -308,7 +309,10 @@ function BlockCard({
   const [searchFocus, setSearchFocus] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
   const restCandidates = sportExercises
-    .filter((e) => e.name.toLowerCase().includes(restFilter.trim().toLowerCase()))
+    .filter((e) => {
+      const f = restFilter.trim().toLowerCase();
+      return !f || e.name.toLowerCase().includes(f) || (e.tags ?? []).some((t) => t.includes(f));
+    })
     .slice(0, 30);
 
   // Při výběru kategorie předvyplň název bloku (jen je-li prázdný/výchozí),
@@ -352,7 +356,7 @@ function BlockCard({
   const filtered = sportExercises
     // ukazuj jen cviky se stejnou kategorií jako blok (má-li blok kategorii)
     .filter((e) => (block.category ? e.category === block.category : true))
-    .filter((e) => e.name.toLowerCase().includes(q))
+    .filter((e) => !q || e.name.toLowerCase().includes(q) || (e.tags ?? []).some((t) => t.includes(q)))
     .slice(0, 40);
 
   function addFromCatalog(ex: ExerciseDTO) {

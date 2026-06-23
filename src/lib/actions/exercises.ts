@@ -91,6 +91,16 @@ export async function updateSportImage(slug: string, dataUrl: string | null): Pr
 
 // --- Cviky – kdokoli (vlastník = autor, soukromé, kopie při editaci) -------
 
+function parseTags(input?: string): string[] {
+  if (!input) return [];
+  const seen = new Set<string>();
+  for (const raw of input.split(/[,\n]/)) {
+    const t = raw.trim().toLowerCase().slice(0, 30);
+    if (t) seen.add(t);
+  }
+  return Array.from(seen).slice(0, 20);
+}
+
 export async function createExercise(input: {
   sportSlug: string;
   name: string;
@@ -99,6 +109,7 @@ export async function createExercise(input: {
   defaultSec?: number;
   spokenName?: string;
   voiceText?: string;
+  tags?: string;
   isPrivate?: boolean;
 }): Promise<void> {
   const userId = await requireUser();
@@ -119,6 +130,7 @@ export async function createExercise(input: {
       voiceText: str(input.voiceText, 300) || null,
       category: cat(input.category),
       coop: coop(input.coop),
+      tags: parseTags(input.tags),
       defaultSec: clampInt(input.defaultSec, 5, 1800, 180),
     },
   });
@@ -138,6 +150,7 @@ export async function updateExercise(input: {
   defaultSec?: number;
   spokenName?: string;
   voiceText?: string;
+  tags?: string;
   isPrivate?: boolean;
 }): Promise<void> {
   const userId = await requireUser();
@@ -157,6 +170,7 @@ export async function updateExercise(input: {
       voiceText: str(input.voiceText, 300) || null,
       category: cat(input.category),
       coop: coop(input.coop),
+      tags: parseTags(input.tags),
       defaultSec: clampInt(input.defaultSec, 5, 1800, 180),
       // soukromost mění jen vlastník/admin; jinak ponech beze změny
       isPrivate: isOwner || admin ? Boolean(input.isPrivate) : ex.isPrivate,

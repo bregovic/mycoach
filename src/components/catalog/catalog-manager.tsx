@@ -31,6 +31,7 @@ export interface CatExercise {
   defaultSec: number | null;
   spokenName: string | null;
   voiceText: string | null;
+  tags: string[];
   isPrivate: boolean;
   audioKey: string | null;
   sportSlug: string;
@@ -122,7 +123,9 @@ export function CatalogManager({
           e.sportSlug === sport &&
           (!category || e.category === category) &&
           (!mineOnly || e.mine) &&
-          e.name.toLowerCase().includes(q),
+          (!q ||
+            e.name.toLowerCase().includes(q) ||
+            (e.tags ?? []).some((t) => t.includes(q))),
       ),
     [exercises, sport, category, mineOnly, q],
   );
@@ -231,6 +234,7 @@ export function CatalogManager({
                   defaultSec: Number(fd.get("defaultSec") ?? 180),
                   spokenName: String(fd.get("spokenName") ?? ""),
                   voiceText: String(fd.get("voiceText") ?? ""),
+                  tags: String(fd.get("tags") ?? ""),
                   isPrivate: fd.get("isPrivate") === "on",
                 }),
               );
@@ -267,6 +271,7 @@ export function CatalogManager({
               </div>
               <input name="spokenName" placeholder="Mluvený název (nepovinné)" className={`${input} sm:col-span-2`} />
               <input name="voiceText" placeholder="Hlasový pokyn (nepovinné)" className={`${input} sm:col-span-2`} />
+              <input name="tags" placeholder="Štítky pro hledání, čárkou (nepovinné)" className={`${input} sm:col-span-2`} />
             </div>
             <div className="mt-3 flex items-center justify-between">
               <label className="flex items-center gap-2 text-sm text-zinc-700">
@@ -352,6 +357,7 @@ function ExerciseRow({
             defaultSec: Number(fd.get("defaultSec") ?? 180),
             spokenName: String(fd.get("spokenName") ?? ""),
             voiceText: String(fd.get("voiceText") ?? ""),
+            tags: String(fd.get("tags") ?? ""),
             isPrivate: fd.get("isPrivate") === "on",
           }),
         );
@@ -400,6 +406,10 @@ function ExerciseRow({
         <div>
           <label className={label}>Hlasový pokyn</label>
           <input name="voiceText" defaultValue={ex.voiceText ?? ""} placeholder="Detailní pokyn čtený v přehrávači" className={`${input} mt-1`} />
+        </div>
+        <div>
+          <label className={label}>Štítky (pro hledání, oddělené čárkou)</label>
+          <input name="tags" defaultValue={(ex.tags ?? []).join(", ")} placeholder="např. obrana, footwork, začátečník" className={`${input} mt-1`} />
         </div>
 
         {/* MP3 instrukce */}
