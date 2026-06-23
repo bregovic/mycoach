@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { Brand } from "@/components/brand";
+import { AppHeader } from "@/components/app-header";
 import { categoryLabel } from "@/lib/packages";
 import {
   PackageSubscribe,
@@ -72,25 +72,8 @@ export default async function PackageDetailPage({
   const cat = categoryLabel(pkg.category);
 
   return (
-    <main className="min-h-dvh bg-zinc-50">
-      <header className="flex items-center justify-between border-b border-zinc-200 bg-white/80 px-6 py-4 backdrop-blur">
-        <Link href="/dashboard">
-          <Brand />
-        </Link>
-        <div className="flex items-center gap-4">
-          {pkg.authorId === userId && (
-            <Link
-              href={`/balicky/${pkg.slug}/upravit`}
-              className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100"
-            >
-              Upravit
-            </Link>
-          )}
-          <Link href="/balicky" className="text-sm text-zinc-500 transition hover:text-zinc-900">
-            ← Balíčky
-          </Link>
-        </div>
-      </header>
+    <main className="min-h-dvh bg-gradient-to-b from-zinc-50 to-zinc-100/40">
+      <AppHeader back={{ href: "/balicky", label: "Balíček" }} />
 
       <section className="mx-auto max-w-2xl px-6 py-12">
         {/* Hlavička balíčku */}
@@ -101,7 +84,15 @@ export default async function PackageDetailPage({
           >
             {pkg.icon ?? "📦"}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
+            {pkg.authorId === userId && (
+              <Link
+                href={`/balicky/${pkg.slug}/upravit`}
+                className="float-right rounded-lg border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100"
+              >
+                Upravit
+              </Link>
+            )}
             <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">{pkg.title}</h1>
             {pkg.subtitle && <p className="mt-1 text-zinc-500">{pkg.subtitle}</p>}
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">

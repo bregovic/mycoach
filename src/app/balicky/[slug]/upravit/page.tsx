@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { Brand } from "@/components/brand";
+import { AppHeader } from "@/components/app-header";
 import { PackageEditor, type PackageDTO } from "@/components/packages/package-editor";
 
 export const metadata = { title: "Úprava balíčku" };
@@ -46,15 +45,8 @@ export default async function PackageEditPage({
   };
 
   return (
-    <main className="min-h-dvh bg-zinc-50">
-      <header className="flex items-center justify-between border-b border-zinc-200 bg-white/80 px-6 py-4 backdrop-blur">
-        <Link href="/dashboard">
-          <Brand />
-        </Link>
-        <Link href="/balicky" className="text-sm text-zinc-500 transition hover:text-zinc-900">
-          ← Balíčky
-        </Link>
-      </header>
+    <main className="min-h-dvh bg-gradient-to-b from-zinc-50 to-zinc-100/40">
+      <AppHeader back={{ href: "/balicky", label: "Úprava balíčku" }} />
 
       <section className="mx-auto max-w-2xl px-6 py-10">
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Úprava balíčku</h1>

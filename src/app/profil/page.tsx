@@ -6,7 +6,7 @@ import { ProfileForm, type ProfileValues } from "@/components/profile-form";
 import { WeightForm } from "@/components/weight-form";
 import { WeightChart, type WeightPoint } from "@/components/weight-chart";
 import { calcAge, calcBmi, bmiCategory, type BmiTone } from "@/lib/health";
-import { Brand } from "@/components/brand";
+import { AppHeader } from "@/components/app-header";
 import { AvatarUploader } from "@/components/avatar-uploader";
 
 export const metadata = { title: "Profil" };
@@ -87,15 +87,8 @@ export default async function ProfilePage() {
     : null;
 
   return (
-    <main className="min-h-dvh bg-zinc-50">
-      <header className="flex items-center justify-between border-b border-zinc-200 bg-white/80 px-6 py-4 backdrop-blur">
-        <Link href="/dashboard">
-          <Brand />
-        </Link>
-        <Link href="/dashboard" className="text-sm text-zinc-500 transition hover:text-zinc-900">
-          ← Přehled
-        </Link>
-      </header>
+    <main className="min-h-dvh bg-gradient-to-b from-zinc-50 to-zinc-100/40">
+      <AppHeader back={{ href: "/dashboard", label: "Profil" }} />
 
       <section className="mx-auto max-w-3xl px-6 py-12">
         <div className="flex items-center justify-between gap-4">

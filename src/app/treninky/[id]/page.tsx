@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { Brand } from "@/components/brand";
+import { AppHeader } from "@/components/app-header";
 import { TrainingEditor, type TrainingDTO } from "@/components/trainings/training-editor";
 
 export const metadata = { title: "Úprava tréninku" };
@@ -51,15 +50,8 @@ export default async function TrainingEditorPage({
   };
 
   return (
-    <main className="min-h-dvh bg-zinc-50">
-      <header className="flex items-center justify-between border-b border-zinc-200 bg-white/80 px-6 py-4 backdrop-blur">
-        <Link href="/dashboard">
-          <Brand />
-        </Link>
-        <Link href="/treninky" className="text-sm text-zinc-500 transition hover:text-zinc-900">
-          ← Moje tréninky
-        </Link>
-      </header>
+    <main className="min-h-dvh bg-gradient-to-b from-zinc-50 to-zinc-100/40">
+      <AppHeader back={{ href: "/treninky", label: "Úprava tréninku" }} />
 
       <section className="mx-auto max-w-3xl px-6 py-10">
         <TrainingEditor training={dto} />
