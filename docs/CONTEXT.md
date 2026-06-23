@@ -136,9 +136,10 @@ Engine je **sport-agnostický** — box je jen první „disciplína" (dataset).
    (`/trening/[id]`). Zatím „jen pro sebe" (autor = přihlášený uživatel).
 
 **Fáze 2 — obsah a sporty:**
-8. 🔶 Přesun cviků z JSON do DB (`Sport` + `Exercise`); **více sportů**. *(Autorované tréninky už
-   žijí v DB, ale cviky jsou inline v `BlockItem`; generátor stále čte `box-drills.json`.)*
-9. ⏭ Výběr sportu/aktivity v UI.
+8. ✅ Cviky v DB (`Sport`+`Exercise`): číselník **Box** (104 cviků naseedovaných z `box-drills.json`),
+   editor tréninku z něj vybírá (lookup dle sportu, hlídá duplicity). ⏭ víc sportů, generátor stále JSON.
+9. 🔶 Výběr sportu v UI: hotový v editoru tréninku (číselník `Sport`). Tréninky mají i obtížnost,
+   logo, cílovou délku a **veřejný flag** → `/treninky` má objevování veřejných + „přidat do kalendáře".
 10. ⏭ **Trenér ↔ klient**: role `trainer`, klient si vybere trenéra, trenér vidí jeho výsledky
     (`WorkoutLog`/`ScheduledTask`) a skládá mu tréninky (sdílení `Training`). Řez #2 plánu.
 11. 🔶 **Balíčky / programy** (`/balicky`, `/balicky/[slug]`): autorovaný bundle prvků
