@@ -20,7 +20,7 @@ export async function AppHeader({ back }: { back?: { href: string; label: string
 
   return (
     <header className="sticky top-0 z-20 border-b border-zinc-200/80 bg-white/70 backdrop-blur-md">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3.5">
+      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6 sm:py-3.5">
         <div className="flex items-center gap-2.5">
           <Link href="/dashboard" className="transition hover:opacity-80">
             <Brand />

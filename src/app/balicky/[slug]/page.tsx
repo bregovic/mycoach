@@ -75,7 +75,7 @@ export default async function PackageDetailPage({
     <main className="min-h-dvh bg-gradient-to-b from-zinc-50 to-zinc-100/40">
       <AppHeader back={{ href: "/balicky", label: "Balíček" }} />
 
-      <section className="mx-auto max-w-2xl px-6 py-12">
+      <section className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
         {/* Hlavička balíčku */}
         <div className="flex items-start gap-4">
           <div

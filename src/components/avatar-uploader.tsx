@@ -6,7 +6,7 @@ import { removeAvatarAction, updateAvatarAction } from "@/lib/actions/avatar";
 import { Avatar } from "./avatar";
 
 const OUT = 256; // výsledná strana čtverce v px
-const V = 240; // velikost náhledového okénka (CSS px)
+const V = 200; // velikost náhledového okénka (CSS px); menší kvůli úzkým telefonům
 
 type Frame = { scale: number; x: number; y: number };
 

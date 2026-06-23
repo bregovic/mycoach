@@ -48,7 +48,7 @@ export default async function PackageEditPage({
     <main className="min-h-dvh bg-gradient-to-b from-zinc-50 to-zinc-100/40">
       <AppHeader back={{ href: "/balicky", label: "Úprava balíčku" }} />
 
-      <section className="mx-auto max-w-2xl px-6 py-10">
+      <section className="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-10">
         <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Úprava balíčku</h1>
         <p className="mt-1 text-sm text-zinc-500">
           Tohle je šablona — upravit ji můžeš jen ty jako autor. Odběratelé si dělají vlastní kopii.

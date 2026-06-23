@@ -82,7 +82,7 @@ export function CalendarView({ weeks, year, month0, todayKey, activities, tasks,
                 type="button"
                 onClick={() => setSelected(key)}
                 className={[
-                  "min-h-24 border-b border-r border-zinc-100 p-1.5 text-left align-top transition hover:bg-zinc-50",
+                  "min-h-16 border-b border-r border-zinc-100 p-1 text-left align-top transition hover:bg-zinc-50 sm:min-h-24 sm:p-1.5",
                   inMonth ? "bg-white" : "bg-zinc-50/60 text-zinc-400",
                   selected === key ? "ring-2 ring-inset ring-zinc-900" : "",
                 ].join(" ")}

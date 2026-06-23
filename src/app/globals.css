@@ -11,4 +11,15 @@ html {
 
 body {
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Na mobilu zvětši písmo formulářových prvků na 16px, aby iOS Safari
+   nezoomoval při zaměření pole. (Tailwind text-sm = 14px → zoom.) */
+@media (max-width: 640px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="file"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }

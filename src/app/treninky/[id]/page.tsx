@@ -90,7 +90,7 @@ export default async function TrainingEditorPage({
     <main className="min-h-dvh bg-gradient-to-b from-zinc-50 to-zinc-100/40">
       <AppHeader back={{ href: "/treninky", label: "Úprava tréninku" }} />
 
-      <section className="mx-auto max-w-3xl px-6 py-10">
+      <section className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
         <TrainingEditor training={dto} sports={sportsDto} exercises={exercisesDto} />
       </section>
     </main>
