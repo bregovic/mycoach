@@ -83,10 +83,12 @@ export function TrainingEditor({
   training,
   sports,
   exercises,
+  isAdmin = false,
 }: {
   training: TrainingDTO;
   sports: SportDTO[];
   exercises: ExerciseDTO[];
+  isAdmin?: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -226,6 +228,7 @@ export function TrainingEditor({
             isFirst={i === 0}
             isLast={i === training.blocks.length - 1}
             sportExercises={sportExercises}
+            isAdmin={isAdmin}
             run={run}
           />
         ))}
@@ -267,12 +270,14 @@ function BlockCard({
   isFirst,
   isLast,
   sportExercises,
+  isAdmin,
   run,
 }: {
   block: BlockDTO;
   isFirst: boolean;
   isLast: boolean;
   sportExercises: ExerciseDTO[];
+  isAdmin: boolean;
   run: (fn: () => Promise<unknown>) => void;
 }) {
   const router = useRouter();
@@ -403,9 +408,16 @@ function BlockCard({
               )}
             </div>
             {note && <p className="mt-1 text-xs text-amber-600">{note}</p>}
-            <button type="button" onClick={() => { setLookupOpen(false); setFilter(""); setNote(null); }} className="mt-2 text-xs text-zinc-500 transition hover:text-zinc-800">
-              Zavřít
-            </button>
+            <div className="mt-2 flex items-center justify-between">
+              <button type="button" onClick={() => { setLookupOpen(false); setFilter(""); setNote(null); }} className="text-xs text-zinc-500 transition hover:text-zinc-800">
+                Zavřít
+              </button>
+              {isAdmin && (
+                <Link href="/admin/cviky" className="text-xs font-medium text-zinc-500 transition hover:text-zinc-800">
+                  Upravit číselník →
+                </Link>
+              )}
+            </div>
           </div>
         ) : (
           <div className="flex gap-2">
