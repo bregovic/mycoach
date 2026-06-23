@@ -30,10 +30,17 @@ function revalidate(trainingId?: string) {
 
 // --- Trénink (hlavička) ----------------------------------------------------
 
+const DIFFICULTIES = ["zacatecnik", "mirne_pokrocily", "pokrocily", "expert"];
+
 export async function createTraining(): Promise<void> {
   const userId = await requireUserId();
+  const last = await prisma.training.findFirst({
+    where: { userId },
+    orderBy: { number: "desc" },
+    select: { number: true },
+  });
   const t = await prisma.training.create({
-    data: { userId, title: "Nový trénink", sportSlug: "box" },
+    data: { userId, title: "Nový trénink", sportSlug: "box", number: (last?.number ?? 0) + 1 },
     select: { id: true },
   });
   redirect(`/treninky/${t.id}`);
@@ -44,20 +51,42 @@ export async function updateTrainingMeta(input: {
   title: string;
   description?: string;
   sportSlug?: string;
+  difficulty?: string;
+  targetMin?: number | null;
+  isPublic?: boolean;
   prepareSec: number;
 }): Promise<void> {
   const userId = await requireUserId();
   const title = str(input.title, 80) || "Bez názvu";
+  const difficulty =
+    input.difficulty && DIFFICULTIES.includes(input.difficulty) ? input.difficulty : null;
+  const targetMin =
+    input.targetMin && input.targetMin > 0 ? clampInt(input.targetMin, 1, 600, 60) : null;
   await prisma.training.updateMany({
     where: { id: input.id, userId },
     data: {
       title,
       description: str(input.description, 500) || null,
       sportSlug: str(input.sportSlug, 40) || null,
+      difficulty,
+      targetMin,
+      isPublic: Boolean(input.isPublic),
       prepareSec: clampInt(input.prepareSec, 0, 120, 10),
     },
   });
   revalidate(input.id);
+}
+
+export async function updateTrainingImage(id: string, dataUrl: string | null): Promise<void> {
+  const userId = await requireUserId();
+  const value =
+    typeof dataUrl === "string" &&
+    dataUrl.length <= 400_000 &&
+    /^data:image\/(jpeg|png|webp);base64,/.test(dataUrl)
+      ? dataUrl
+      : null;
+  await prisma.training.updateMany({ where: { id, userId }, data: { imageUrl: value } });
+  revalidate(id);
 }
 
 export async function deleteTraining(id: string): Promise<void> {
@@ -158,6 +187,47 @@ export async function addItem(blockId: string): Promise<void> {
     data: { blockId, order: count, name: "Nový cvik", durationSec: 180, coop: "najednou" },
   });
   revalidate(block.trainingId);
+}
+
+/**
+ * Přidá cvik z číselníku Exercise do bloku. Hlídá duplicity v rámci bloku
+ * (stejné exerciseId se nepřidá podruhé). Vrací false, pokud už tam je.
+ */
+export async function addItemFromExercise(
+  blockId: string,
+  exerciseId: string,
+): Promise<{ added: boolean }> {
+  const userId = await requireUserId();
+  const block = await prisma.block.findFirst({
+    where: { id: blockId, training: { userId } },
+    select: { id: true, trainingId: true },
+  });
+  if (!block) return { added: false };
+
+  const ex = await prisma.exercise.findUnique({ where: { id: exerciseId } });
+  if (!ex) return { added: false };
+
+  const dup = await prisma.blockItem.findFirst({
+    where: { blockId, exerciseId },
+    select: { id: true },
+  });
+  if (dup) return { added: false }; // už je v bloku
+
+  const count = await prisma.blockItem.count({ where: { blockId } });
+  await prisma.blockItem.create({
+    data: {
+      blockId,
+      order: count,
+      exerciseId: ex.id,
+      name: ex.name,
+      spokenName: ex.spokenName,
+      voiceText: ex.voiceText,
+      coop: ex.coop ?? "najednou",
+      durationSec: ex.defaultSec ?? 180,
+    },
+  });
+  revalidate(block.trainingId);
+  return { added: true };
 }
 
 export async function updateItem(input: {
