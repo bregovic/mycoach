@@ -7,6 +7,7 @@ import { WeightForm } from "@/components/weight-form";
 import { WeightChart, type WeightPoint } from "@/components/weight-chart";
 import { calcAge, calcBmi, bmiCategory, type BmiTone } from "@/lib/health";
 import { Brand } from "@/components/brand";
+import { AvatarUploader } from "@/components/avatar-uploader";
 
 export const metadata = { title: "Profil" };
 
@@ -45,7 +46,8 @@ export default async function ProfilePage() {
   if (!session?.user?.id) redirect("/login");
   const userId = session.user.id;
 
-  const [profile, metrics] = await Promise.all([
+  const [user, profile, metrics] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: { name: true, email: true, image: true } }),
     prisma.profile.findUnique({ where: { userId } }),
     prisma.bodyMetric.findMany({
       where: { userId },
@@ -53,6 +55,7 @@ export default async function ProfilePage() {
       select: { date: true, weightKg: true, bodyFat: true },
     }),
   ]);
+  const displayName = user?.name ?? user?.email ?? "";
   const latest = metrics.at(-1) ?? null;
 
   const dayMonth = new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "numeric" });
@@ -105,8 +108,13 @@ export default async function ProfilePage() {
           </Link>
         </div>
 
+        {/* Profilová fotka */}
+        <div className="mt-8 rounded-2xl border border-zinc-200 bg-white p-6">
+          <AvatarUploader src={user?.image ?? null} name={displayName} />
+        </div>
+
         {/* Přehled */}
-        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatTile label="Aktuální váha" value={weightKg != null ? String(weightKg) : "—"} unit="kg"
             hint={lastDate && <span className="text-xs text-zinc-400">{lastDate}</span>} />
           <StatTile label="Výška" value={profile?.heightCm != null ? String(profile.heightCm) : "—"} unit="cm" />
