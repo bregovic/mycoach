@@ -126,8 +126,9 @@ export async function createExercise(input: {
 }
 
 /**
- * Úprava cviku. Vlastník (nebo admin) edituje na místě; ostatní si vytvoří
- * vlastní kopii (původní zůstává nedotčen).
+ * Úprava cviku přímo na místě. Smí: vlastník, admin, nebo kdokoli u
+ * NEsoukromého cviku (sdílený katalog). Soukromé cizí cviky nelze upravit.
+ * Soukromost (isPrivate) mění jen vlastník/admin – cizí nesoukromý zůstává veřejný.
  */
 export async function updateExercise(input: {
   id: string;
@@ -143,24 +144,24 @@ export async function updateExercise(input: {
   const ex = await prisma.exercise.findUnique({ where: { id: input.id } });
   if (!ex) return;
 
-  const name = str(input.name, 80) || "Cvik";
-  const data = {
-    name,
-    spokenName: str(input.spokenName, 120) || name,
-    voiceText: str(input.voiceText, 300) || null,
-    category: cat(input.category),
-    coop: coop(input.coop),
-    defaultSec: clampInt(input.defaultSec, 5, 1800, 180),
-    isPrivate: Boolean(input.isPrivate),
-  };
-
   const admin = (await roleOf(userId)) === "admin";
-  if (ex.ownerId === userId || admin) {
-    await prisma.exercise.update({ where: { id: ex.id }, data });
-  } else {
-    // kopie pro editujícího
-    await prisma.exercise.create({ data: { ...data, sportId: ex.sportId, ownerId: userId } });
-  }
+  const isOwner = ex.ownerId === userId;
+  if (!admin && !isOwner && ex.isPrivate) return; // cizí soukromé nelze
+
+  const name = str(input.name, 80) || "Cvik";
+  await prisma.exercise.update({
+    where: { id: ex.id },
+    data: {
+      name,
+      spokenName: str(input.spokenName, 120) || name,
+      voiceText: str(input.voiceText, 300) || null,
+      category: cat(input.category),
+      coop: coop(input.coop),
+      defaultSec: clampInt(input.defaultSec, 5, 1800, 180),
+      // soukromost mění jen vlastník/admin; jinak ponech beze změny
+      isPrivate: isOwner || admin ? Boolean(input.isPrivate) : ex.isPrivate,
+    },
+  });
   revalidate();
 }
 
@@ -177,15 +178,16 @@ export async function deleteExercise(id: string): Promise<void> {
 
 // --- MP3 instrukce ke cviku ------------------------------------------------
 
+// MP3 smí spravovat vlastník, admin, nebo kdokoli u nesoukromého (sdíleného) cviku.
 async function canEditExercise(userId: string, id: string): Promise<{ audioKey: string | null } | null> {
-  const ex = await prisma.exercise.findUnique({ where: { id }, select: { ownerId: true, audioKey: true } });
+  const ex = await prisma.exercise.findUnique({ where: { id }, select: { ownerId: true, audioKey: true, isPrivate: true } });
   if (!ex) return null;
   const admin = (await roleOf(userId)) === "admin";
-  if (ex.ownerId !== userId && !admin) return null;
+  if (ex.ownerId !== userId && !admin && ex.isPrivate) return null;
   return { audioKey: ex.audioKey };
 }
 
-/** Nahraje MP3 instrukci ke cviku (vlastník/admin). FormData: exerciseId + file. */
+/** Nahraje MP3 instrukci ke cviku (vlastník/admin/nesoukromý). FormData: exerciseId + file. */
 export async function uploadExerciseAudio(formData: FormData): Promise<void> {
   const userId = await requireUser();
   const id = String(formData.get("exerciseId") ?? "");

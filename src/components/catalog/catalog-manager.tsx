@@ -264,7 +264,7 @@ export function CatalogManager({
           <div className="mt-3 space-y-2">
             {list.length === 0 && <p className="rounded-2xl border border-dashed border-zinc-300 bg-white p-6 text-center text-sm text-zinc-400">Žádný cvik.</p>}
             {list.map((ex) => (
-              <ExerciseRow key={ex.id} ex={ex} run={run} />
+              <ExerciseRow key={ex.id} ex={ex} isAdmin={isAdmin} run={run} />
             ))}
           </div>
         </>
@@ -297,7 +297,7 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
   );
 }
 
-function ExerciseRow({ ex, run }: { ex: CatExercise; run: (fn: () => Promise<unknown>) => void }) {
+function ExerciseRow({ ex, isAdmin, run }: { ex: CatExercise; isAdmin: boolean; run: (fn: () => Promise<unknown>) => void }) {
   function onAudio(file: File | null | undefined) {
     if (!file) return;
     const fd = new FormData();
@@ -332,7 +332,6 @@ function ExerciseRow({ ex, run }: { ex: CatExercise; run: (fn: () => Promise<unk
         </span>
         {ex.isPrivate && <span className="rounded bg-amber-50 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-amber-700">soukromé</span>}
         {ex.audioKey && <span className="rounded bg-green-50 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-green-700">🔊 MP3</span>}
-        {!ex.mine && <span className="text-xs text-zinc-400">úprava vytvoří tvou kopii</span>}
       </div>
       <div className="space-y-3">
         <div>
@@ -378,13 +377,11 @@ function ExerciseRow({ ex, run }: { ex: CatExercise; run: (fn: () => Promise<unk
             <div className="mt-2 flex flex-wrap items-center gap-3">
               {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
               <audio controls src={audioSrc(ex.audioKey)} className="h-9 max-w-full" />
-              {ex.mine && (
-                <button type="button" onClick={() => run(() => removeExerciseAudio(ex.id))} className="text-xs text-red-600 transition hover:text-red-700">
-                  Odebrat MP3
-                </button>
-              )}
+              <button type="button" onClick={() => run(() => removeExerciseAudio(ex.id))} className="text-xs text-red-600 transition hover:text-red-700">
+                Odebrat MP3
+              </button>
             </div>
-          ) : ex.mine ? (
+          ) : (
             <label className="mt-2 inline-flex cursor-pointer items-center rounded-lg border border-dashed border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-600 transition hover:border-zinc-400 hover:bg-white">
               + Nahrát MP3
               <input
@@ -397,8 +394,6 @@ function ExerciseRow({ ex, run }: { ex: CatExercise; run: (fn: () => Promise<unk
                 }}
               />
             </label>
-          ) : (
-            <p className="mt-1 text-xs text-zinc-400">Bez nahrávky.</p>
           )}
         </div>
       </div>
@@ -408,13 +403,13 @@ function ExerciseRow({ ex, run }: { ex: CatExercise; run: (fn: () => Promise<unk
           soukromé
         </label>
         <div className="flex items-center gap-3">
-          {ex.mine && (
+          {(ex.mine || isAdmin) && (
             <button type="button" onClick={() => { if (confirm(`Smazat cvik „${ex.name}"?`)) run(() => deleteExercise(ex.id)); }} className="text-xs text-red-600 transition hover:text-red-700">
               Smazat
             </button>
           )}
           <button type="submit" className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-100">
-            {ex.mine ? "Uložit" : "Uložit kopii"}
+            Uložit
           </button>
         </div>
       </div>
