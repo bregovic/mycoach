@@ -124,10 +124,33 @@ export function Trainer({
     const url = arr[Math.floor(Math.random() * arr.length)];
     try {
       if (!cueRef.current) cueRef.current = new Audio();
+      cueRef.current.onended = null;
       cueRef.current.src = url;
       void cueRef.current.play().catch(() => {});
     } catch {
       /* ignore */
+    }
+    return true;
+  }, []);
+
+  // Přehraje cue a po jeho dokončení zavolá onEnd (sekvenčně, ať se nepřekrývá
+  // s instrukcí). Když cue není, vrátí false (onEnd nezavolá – řeší volající).
+  const playCueThen = useCallback((type: string, onEnd: () => void): boolean => {
+    const arr = cuesRef.current[type];
+    if (!arr || arr.length === 0) return false;
+    const url = arr[Math.floor(Math.random() * arr.length)];
+    try {
+      if (!cueRef.current) cueRef.current = new Audio();
+      const done = () => {
+        if (cueRef.current) cueRef.current.onended = null;
+        onEnd();
+      };
+      cueRef.current.onended = done;
+      cueRef.current.onerror = done;
+      cueRef.current.src = url;
+      void cueRef.current.play().catch(done);
+    } catch {
+      onEnd();
     }
     return true;
   }, []);
@@ -232,21 +255,25 @@ export function Trainer({
       const kickoff = idxRef.current < 0; // úplný začátek tréninku
       setIndex(i);
       setTimeLeft(sg.duration);
-      // Na úplném začátku bez přípravy zahraj „start" (jinak round_start/gong).
-      if (kickoff && sg.kind === "work" && playCue("start")) {
-        /* zahráno „start" */
-      } else {
-        playStartCue(sg);
-      }
 
       if (sg.kind === "work") {
-        // Instrukci buď zazněla už v pauze (předohlášení), nebo ji přečti teď.
-        if (!workPreannouncedRef.current) readInstruction(sg);
+        // Na úplném začátku „start", jinak „round_start".
+        const cueType = kickoff ? "start" : "round_start";
+        const wasPre = workPreannouncedRef.current;
         workPreannouncedRef.current = false;
+        if (wasPre) {
+          // instrukce už zazněla v pauze → jen cue (žádné čtení přes sebe)
+          if (!playCue(cueType)) audio.playBell(false);
+        } else if (!playCueThen(cueType, () => readInstruction(sg))) {
+          // žádný cue → gong a hned instrukce
+          audio.playBell(false);
+          readInstruction(sg);
+        }
         return;
       }
 
-      // pauza / příprava / konec – přehraj vlastní pokyn (aktivní pauza = kondiční cvik)
+      // pauza / příprava / konec – cue + vlastní pokyn (aktivní pauza = kondiční cvik)
+      playStartCue(sg);
       readInstruction(sg);
 
       // Naplánuj ohlášení dalšího cviku během pauzy (ať navazuje na jeho start).
@@ -272,7 +299,7 @@ export function Trainer({
         }
       }
     },
-    [playStartCue, readInstruction, playCue, speech],
+    [playStartCue, readInstruction, playCue, playCueThen, audio, speech],
   );
 
   // jeden tick za sekundu (čte aktuální stav přes refy)
@@ -299,7 +326,8 @@ export function Trainer({
     }
 
     if (next <= 5) audio.playTick();
-    if (next === 5) playCue("countdown");
+    // Mluvený odpočet jen na konci cvičení (ne v pauze před startem cviku).
+    if (next === 5 && sg.kind === "work") playCue("countdown");
     if (sg.kind === "work" && sg.duration > 20 && next === Math.floor(sg.duration / 2)) {
       if (sg.coop === "v_pulce") {
         if (!playCue("half_swap")) {
@@ -562,12 +590,12 @@ export function Trainer({
     >
       <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
         {/* Časovač */}
-        <section className={`rounded-2xl border border-zinc-200 bg-white p-4 text-center shadow-sm ring-2 sm:p-6 ${st.ring} transition`}>
-          <div className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${st.tag}`}>
+        <section className={`min-w-0 overflow-hidden rounded-2xl border border-zinc-200 bg-white p-4 text-center shadow-sm ring-2 sm:p-6 ${st.ring} transition`}>
+          <div className={`inline-flex max-w-full rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${st.tag}`}>
             {seg && phaseLabel(seg)}
             {seg?.kind === "work" && seg.roundNum ? ` · kolo ${seg.roundNum}/${seg.totalRoundsInPhase}` : ""}
           </div>
-          <div className={`mt-2 font-bold tabular-nums tracking-tight ${st.text} text-[clamp(3.75rem,17vw,7.5rem)] leading-none`}>
+          <div className={`mt-2 font-bold tabular-nums tracking-tight ${st.text} text-[clamp(3rem,15vw,6.5rem)] leading-none`}>
             {formatTime(timeLeft)}
           </div>
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-100">
@@ -609,7 +637,7 @@ export function Trainer({
         </section>
 
         {/* Plán */}
-        <section className={card}>
+        <section className={`${card} min-w-0`}>
           <h2 className="text-lg font-semibold text-zinc-900">Plán</h2>
           <div className="mt-2 flex gap-4 text-sm text-zinc-500">
             <span>Celkem <b className="text-zinc-800">{formatTime(totals.totalSec)}</b></span>
