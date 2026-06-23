@@ -116,6 +116,9 @@ export function Trainer({
   });
   const preAudioRef = useRef<HTMLAudioElement | null>(null);
   const workPreannouncedRef = useRef(false);
+  // Pozdržení odpočtu (u aktivní pauzy: nejdřív „konec" + pokyn ke kondici, pak běh).
+  const holdRef = useRef(false);
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Přehraje náhodný uživatelský zvukový pokyn daného typu. Vrací, zda něco hrálo.
   const playCue = useCallback((type: string): boolean => {
@@ -166,6 +169,26 @@ export function Trainer({
       if (!cuePlayed) audio.playBell(sg.kind === "prepare" || sg.kind === "finish");
     },
     [audio, playCue],
+  );
+
+  // Jako playStartCue, ale po dokončení cue zavolá onEnd (sekvenčně). Pro úseky,
+  // kde má po „cue" navázat čtený pokyn (aktivní pauza).
+  const startCueThen = useCallback(
+    (sg: Segment, onEnd: () => void) => {
+      if (sg.kind === "prepare") {
+        if (playCueThen("start", onEnd)) return;
+      } else if (sg.kind === "work") {
+        if (playCueThen("round_start", onEnd)) return;
+      } else if (sg.kind === "rest") {
+        if (playCueThen("round_end", onEnd)) return;
+        if (playCueThen("rest", onEnd)) return;
+      } else if (sg.kind === "finish") {
+        if (playCueThen("finish", onEnd)) return;
+      }
+      audio.playBell(sg.kind === "prepare" || sg.kind === "finish");
+      onEnd();
+    },
+    [audio, playCueThen],
   );
 
   // Coop pokyn (jak se cvik dělá) – přednostně tvůj MP3 cue, jinak hlas. Individuální = nic.
@@ -221,8 +244,13 @@ export function Trainer({
   const goTo = useCallback(
     (i: number) => {
       const segs = segsRef.current;
-      // ukliď naplánované předohlášení
+      // ukliď naplánované předohlášení a pozdržení
       preRef.current = { work: null, leadSec: 0, announced: false };
+      holdRef.current = false;
+      if (holdTimerRef.current) {
+        clearTimeout(holdTimerRef.current);
+        holdTimerRef.current = null;
+      }
       if (preAudioRef.current) {
         try {
           preAudioRef.current.pause();
@@ -272,9 +300,24 @@ export function Trainer({
         return;
       }
 
-      // pauza / příprava / konec – cue + vlastní pokyn (aktivní pauza = kondiční cvik)
-      playStartCue(sg);
-      readInstruction(sg);
+      // pauza / příprava / konec
+      const restHasInstr = !!sg.audioUrl || (sg.voiceText ?? "").trim().length > 0;
+      if (sg.kind === "rest" && restHasInstr) {
+        // Aktivní pauza s pokynem: „konec" → pokyn ke kondici → teprve pak odpočet.
+        holdRef.current = true;
+        const release = () => {
+          if (holdTimerRef.current) {
+            clearTimeout(holdTimerRef.current);
+            holdTimerRef.current = null;
+          }
+          if (idxRef.current === i) holdRef.current = false;
+        };
+        startCueThen(sg, () => readInstruction(sg, release));
+        holdTimerRef.current = setTimeout(release, 15000); // pojistka proti zaseknutí
+      } else {
+        playStartCue(sg);
+        readInstruction(sg);
+      }
 
       // Naplánuj ohlášení dalšího cviku během pauzy (ať navazuje na jeho start).
       if (sg.kind === "rest" || sg.kind === "prepare") {
@@ -299,7 +342,7 @@ export function Trainer({
         }
       }
     },
-    [playStartCue, readInstruction, playCue, playCueThen, audio, speech],
+    [playStartCue, startCueThen, readInstruction, playCue, playCueThen, audio, speech],
   );
 
   // jeden tick za sekundu (čte aktuální stav přes refy)
@@ -308,6 +351,7 @@ export function Trainer({
     const segs = segsRef.current;
     const sg = segs[i];
     if (!sg) return;
+    if (holdRef.current) return; // odpočet podržen, dokud nedozní pokyn aktivní pauzy
     const next = tlRef.current - 1;
     if (next <= 0) {
       goTo(i + 1);
@@ -406,6 +450,11 @@ export function Trainer({
   const reset = () => {
     preRef.current = { work: null, leadSec: 0, announced: false };
     workPreannouncedRef.current = false;
+    holdRef.current = false;
+    if (holdTimerRef.current) {
+      clearTimeout(holdTimerRef.current);
+      holdTimerRef.current = null;
+    }
     setRunning(false);
     setIndex(-1);
     setSegments([]);
