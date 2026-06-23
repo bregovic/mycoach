@@ -41,7 +41,7 @@ function Shell({ right, children }: { right: ReactNode; children: ReactNode }) {
           {right}
         </div>
       </header>
-      <section className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10">{children}</section>
+      <section className="mx-auto max-w-4xl px-3 py-4 sm:px-6 sm:py-10">{children}</section>
     </main>
   );
 }
@@ -163,14 +163,6 @@ export function Trainer({
     [speech],
   );
 
-  // Zopakování pokynu (tlačítko ↻) – cue + instrukce naráz.
-  const announce = useCallback(
-    (sg: Segment) => {
-      playStartCue(sg);
-      readInstruction(sg);
-    },
-    [playStartCue, readInstruction],
-  );
 
   const goTo = useCallback(
     (i: number) => {
@@ -512,21 +504,21 @@ export function Trainer({
         </button>
       }
     >
-      <div className="grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+      <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
         {/* Časovač */}
-        <section className={`rounded-2xl border border-zinc-200 bg-white p-6 text-center shadow-sm ring-2 ${st.ring} transition`}>
+        <section className={`rounded-2xl border border-zinc-200 bg-white p-4 text-center shadow-sm ring-2 sm:p-6 ${st.ring} transition`}>
           <div className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${st.tag}`}>
             {seg && phaseLabel(seg)}
             {seg?.kind === "work" && seg.roundNum ? ` · kolo ${seg.roundNum}/${seg.totalRoundsInPhase}` : ""}
           </div>
           {leadIn && <div className="mt-1 text-xs font-medium text-zinc-400">📢 Instrukce… odpočet začne po ní</div>}
-          <div className={`mt-2 font-bold tabular-nums tracking-tight ${st.text} text-[clamp(4.5rem,20vw,8rem)] leading-none`}>
+          <div className={`mt-2 font-bold tabular-nums tracking-tight ${st.text} text-[clamp(3.75rem,17vw,7.5rem)] leading-none`}>
             {formatTime(timeLeft)}
           </div>
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-100">
             <div className={`h-full ${st.bar} transition-[width] duration-1000 ease-linear`} style={{ width: `${pct}%` }} />
           </div>
-          <div className="mt-4 text-xl font-semibold text-zinc-900">{seg?.name}</div>
+          <div className="mt-3 text-lg font-semibold text-zinc-900 sm:mt-4 sm:text-xl">{seg?.name}</div>
           {seg?.voiceText && seg.kind === "work" && <div className="mt-1 text-sm text-zinc-500">{seg.voiceText}</div>}
           {seg?.roles && (
             <div className="mt-3 inline-block rounded-lg border border-dashed border-amber-400 px-3 py-1.5 text-sm text-amber-700">
@@ -539,17 +531,17 @@ export function Trainer({
             </div>
           )}
 
-          <div className="mt-6 flex items-center justify-center gap-3">
-            <CtrlButton title="Zopakovat pokyn" onClick={() => seg && announce(seg)} className="h-14 w-14 border border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100">
+          <div className="mt-4 flex items-center justify-center gap-2 sm:mt-6 sm:gap-3">
+            <CtrlButton title="Zopakovat pokyn" onClick={() => seg && readInstruction(seg)} className="h-12 w-12 border border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 sm:h-14 sm:w-14">
               ↻
             </CtrlButton>
-            <CtrlButton title={running ? "Pauza" : "Spustit"} onClick={togglePlay} className="h-20 w-20 bg-zinc-900 text-2xl text-white hover:bg-zinc-800">
+            <CtrlButton title={running ? "Pauza" : "Spustit"} onClick={togglePlay} className="h-16 w-16 bg-zinc-900 text-xl text-white hover:bg-zinc-800 sm:h-20 sm:w-20 sm:text-2xl">
               {running ? "❚❚" : "▶"}
             </CtrlButton>
-            <CtrlButton title="Přeskočit" onClick={() => goTo(index + 1)} className="h-14 w-14 border border-zinc-300 text-zinc-700 hover:bg-zinc-100">
+            <CtrlButton title="Přeskočit" onClick={() => goTo(index + 1)} className="h-12 w-12 border border-zinc-300 text-zinc-700 hover:bg-zinc-100 sm:h-14 sm:w-14">
               ⏭
             </CtrlButton>
-            <CtrlButton title="Ukončit" onClick={reset} className="h-14 w-14 border border-red-300 bg-red-50 text-red-600 hover:bg-red-100">
+            <CtrlButton title="Ukončit" onClick={reset} className="h-12 w-12 border border-red-300 bg-red-50 text-red-600 hover:bg-red-100 sm:h-14 sm:w-14">
               ⏹
             </CtrlButton>
           </div>
