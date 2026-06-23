@@ -59,6 +59,7 @@ export async function updateTrainingMeta(input: {
   targetMin?: number | null;
   isPublic?: boolean;
   prepareSec: number;
+  betweenBlocksSec?: number;
 }): Promise<void> {
   const userId = await requireUserId();
   const title = str(input.title, 80) || "Bez názvu";
@@ -76,6 +77,7 @@ export async function updateTrainingMeta(input: {
       targetMin,
       isPublic: Boolean(input.isPublic),
       prepareSec: clampInt(input.prepareSec, 0, 120, 10),
+      betweenBlocksSec: clampInt(input.betweenBlocksSec, 0, 600, 60),
     },
   });
   revalidate(input.id);

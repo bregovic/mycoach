@@ -310,6 +310,7 @@ model Training {
   targetMin   Int? // cílová délka v minutách (orientační)
   isPublic    Boolean  @default(false) // veřejný → ostatní si ho najdou a přidají
   prepareSec  Int      @default(10) // délka úvodní přípravy
+  betweenBlocksSec Int @default(60) // pauza mezi bloky (zvlášť od pauz v bloku)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

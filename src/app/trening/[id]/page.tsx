@@ -30,6 +30,7 @@ export default async function PresetTrainingPage({
   const segments = compileTraining({
     title: training.title,
     prepareSec: training.prepareSec,
+    betweenBlocksSec: training.betweenBlocksSec,
     blocks: training.blocks.map((b) => ({
       title: b.title,
       category: b.category,

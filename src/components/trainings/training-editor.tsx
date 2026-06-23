@@ -61,6 +61,7 @@ export interface TrainingDTO {
   targetMin: number | null;
   isPublic: boolean;
   prepareSec: number;
+  betweenBlocksSec: number;
   blocks: BlockDTO[];
 }
 export interface SportDTO {
@@ -110,7 +111,7 @@ export function TrainingEditor({
     });
 
   const totals = workoutTotals(
-    compileTraining({ title: training.title, prepareSec: training.prepareSec, blocks: training.blocks }),
+    compileTraining({ title: training.title, prepareSec: training.prepareSec, betweenBlocksSec: training.betweenBlocksSec, blocks: training.blocks }),
   );
 
   const sportExercises = useMemo(
@@ -144,6 +145,7 @@ export function TrainingEditor({
               targetMin: Number(fd.get("targetMin") ?? 0) || null,
               isPublic: fd.get("isPublic") === "on",
               prepareSec: Number(fd.get("prepareSec") ?? 10),
+              betweenBlocksSec: Number(fd.get("betweenBlocksSec") ?? 60),
             }),
           );
         }}
@@ -201,14 +203,18 @@ export function TrainingEditor({
           </div>
         </div>
 
-        <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_140px]">
-          <div>
-            <label className={label}>Popis (nepovinné)</label>
-            <input name="description" defaultValue={training.description ?? ""} className={`${input} mt-1`} />
-          </div>
+        <div className="mt-4">
+          <label className={label}>Popis (nepovinné)</label>
+          <input name="description" defaultValue={training.description ?? ""} className={`${input} mt-1`} />
+        </div>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>
             <label className={label}>Příprava (s)</label>
             <input name="prepareSec" type="number" min={0} max={120} defaultValue={training.prepareSec} className={`${input} mt-1`} />
+          </div>
+          <div>
+            <label className={label}>Pauza mezi bloky (s)</label>
+            <input name="betweenBlocksSec" type="number" min={0} max={600} defaultValue={training.betweenBlocksSec} className={`${input} mt-1`} />
           </div>
         </div>
 

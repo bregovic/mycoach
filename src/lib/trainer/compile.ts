@@ -41,6 +41,7 @@ export interface AuthoredBlock {
 export interface AuthoredTraining {
   title: string;
   prepareSec: number;
+  betweenBlocksSec?: number; // pauza mezi bloky (zvlášť od pauz v bloku)
   blocks: AuthoredBlock[];
 }
 
@@ -127,9 +128,10 @@ export function compileTraining(t: AuthoredTraining): Segment[] {
       out[x.i].totalRoundsInPhase = works.length;
     });
 
-    // Pauza mezi bloky (oříznutá, pokud je poslední).
-    if (block.restSec > 0) {
-      out.push({ kind: "rest", phase, name: "Pauza mezi bloky", duration: block.restSec });
+    // Pauza mezi bloky (zvlášť nastavitelná; oříznutá, pokud je poslední).
+    const betweenBlocks = Number.isFinite(t.betweenBlocksSec) ? Math.max(0, t.betweenBlocksSec as number) : 60;
+    if (betweenBlocks > 0) {
+      out.push({ kind: "rest", phase, name: "Pauza mezi bloky", duration: betweenBlocks });
     }
   }
 

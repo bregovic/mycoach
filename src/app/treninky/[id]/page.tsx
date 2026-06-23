@@ -60,6 +60,7 @@ export default async function TrainingEditorPage({
     targetMin: training.targetMin,
     isPublic: training.isPublic,
     prepareSec: training.prepareSec,
+    betweenBlocksSec: training.betweenBlocksSec,
     blocks: training.blocks.map((b) => ({
       id: b.id,
       title: b.title,

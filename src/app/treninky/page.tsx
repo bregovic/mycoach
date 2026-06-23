@@ -18,8 +18,8 @@ type Blockish = {
   items: { name: string; spokenName: string | null; voiceText: string | null; coop: string | null; durationSec: number }[];
 };
 
-function totalsOf(prepareSec: number, blocks: Blockish[]) {
-  return workoutTotals(compileTraining({ title: "", prepareSec, blocks }));
+function totalsOf(prepareSec: number, betweenBlocksSec: number, blocks: Blockish[]) {
+  return workoutTotals(compileTraining({ title: "", prepareSec, betweenBlocksSec, blocks }));
 }
 
 export default async function TrainingsPage({
@@ -53,7 +53,7 @@ export default async function TrainingsPage({
 
   const sportName = new Map(sports.map((s) => [s.slug, s.name]));
   const row = (t: (typeof mine)[number]) => {
-    const tot = totalsOf(t.prepareSec, t.blocks);
+    const tot = totalsOf(t.prepareSec, t.betweenBlocksSec, t.blocks);
     return {
       id: t.id,
       number: t.number,
