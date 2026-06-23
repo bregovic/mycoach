@@ -20,7 +20,7 @@ export default async function TrainingEditorPage({
   if (!session?.user?.id) redirect("/login");
 
   const { id } = await params;
-  const [training, sports, exercises, me] = await Promise.all([
+  const [training, sports, exercises] = await Promise.all([
     prisma.training.findFirst({
       where: { id, userId: session.user.id },
       include: {
@@ -32,6 +32,7 @@ export default async function TrainingEditorPage({
     }),
     prisma.sport.findMany({ orderBy: { name: "asc" }, select: { slug: true, name: true, icon: true } }),
     prisma.exercise.findMany({
+      where: { OR: [{ isPrivate: false }, { ownerId: session.user.id }] },
       orderBy: { name: "asc" },
       select: {
         id: true,
@@ -40,13 +41,13 @@ export default async function TrainingEditorPage({
         category: true,
         coop: true,
         defaultSec: true,
+        isPrivate: true,
+        ownerId: true,
         sport: { select: { slug: true } },
       },
     }),
-    prisma.user.findUnique({ where: { id: session.user.id }, select: { role: true } }),
   ]);
   if (!training) notFound();
-  const isAdmin = me?.role === "admin";
 
   const dto: TrainingDTO = {
     id: training.id,
@@ -86,6 +87,8 @@ export default async function TrainingEditorPage({
     coop: e.coop,
     defaultSec: e.defaultSec,
     sportSlug: e.sport.slug,
+    isPrivate: e.isPrivate,
+    mine: e.ownerId === session.user.id,
   }));
 
   return (
@@ -93,7 +96,7 @@ export default async function TrainingEditorPage({
       <AppHeader back={{ href: "/treninky", label: "Úprava tréninku" }} />
 
       <section className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-10">
-        <TrainingEditor training={dto} sports={sportsDto} exercises={exercisesDto} isAdmin={isAdmin} />
+        <TrainingEditor training={dto} sports={sportsDto} exercises={exercisesDto} />
       </section>
     </main>
   );

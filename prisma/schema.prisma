@@ -45,6 +45,7 @@ model User {
   clubsOwned        Club[]             @relation("ClubOwner")
   clubMemberships   ClubMember[]
   attendances       SessionAttendance[]
+  exercisesOwned    Exercise[]         @relation("ExerciseOwner")
 }
 
 model Account {
@@ -125,6 +126,7 @@ model Sport {
   slug      String     @unique
   name      String
   icon      String?
+  imageUrl  String? // fotka sportu (data URL)
   exercises Exercise[]
   plans     Plan[]
 }
@@ -138,14 +140,18 @@ model Exercise {
   category   String? // warmup | combinations | bag_work | sparring | conditioning…
   coop       String? // najednou|stridave|v_pulce|cele_kolo
   defaultSec Int? // navržená délka úseku v sekundách
+  ownerId    String? // kdo cvik zadal (null = systémový/seedovaný)
+  isPrivate  Boolean  @default(false) // soukromé → nenabízí se veřejně
   data       Json? // volná struktura (kompatibilní s legacy drills.json)
   createdAt  DateTime @default(now())
 
   sport      Sport       @relation(fields: [sportId], references: [id], onDelete: Cascade)
+  owner      User?       @relation("ExerciseOwner", fields: [ownerId], references: [id], onDelete: SetNull)
   blockItems BlockItem[]
 
   @@index([sportId])
   @@index([sportId, category])
+  @@index([ownerId])
 }
 
 model Plan {

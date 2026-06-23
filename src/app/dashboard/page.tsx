@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/app-header";
 
 export const metadata = { title: "Přehled" };
@@ -26,12 +25,6 @@ const TILES: Tile[] = [
 export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
-
-  const me = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { role: true },
-  });
-  const isAdmin = me?.role === "admin";
 
   return (
     <main className="min-h-dvh bg-gradient-to-b from-zinc-50 to-zinc-100/40">
@@ -70,16 +63,14 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        {isAdmin && (
-          <div className="mt-6">
-            <Link
-              href="/admin/cviky"
-              className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100"
-            >
-              ⚙️ Administrace — číselník cviků
-            </Link>
-          </div>
-        )}
+        <div className="mt-6">
+          <Link
+            href="/cviky"
+            className="inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100"
+          >
+            📚 Katalog cviků
+          </Link>
+        </div>
       </section>
     </main>
   );

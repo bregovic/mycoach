@@ -21,6 +21,7 @@ import { compileTraining } from "@/lib/trainer/compile";
 import { workoutTotals, formatTime } from "@/lib/trainer/generate";
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/lib/trainer/types";
 import { DIFFICULTY_LABELS, DIFFICULTY_ORDER } from "@/lib/training-meta";
+import { createExercise } from "@/lib/actions/exercises";
 import { ImageUpload } from "@/components/image-upload";
 
 export interface ItemDTO {
@@ -66,6 +67,8 @@ export interface ExerciseDTO {
   coop: string | null;
   defaultSec: number | null;
   sportSlug: string;
+  isPrivate: boolean;
+  mine: boolean;
 }
 
 const COOP_LABELS: Record<string, string> = {
@@ -83,12 +86,10 @@ export function TrainingEditor({
   training,
   sports,
   exercises,
-  isAdmin = false,
 }: {
   training: TrainingDTO;
   sports: SportDTO[];
   exercises: ExerciseDTO[];
-  isAdmin?: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -228,7 +229,7 @@ export function TrainingEditor({
             isFirst={i === 0}
             isLast={i === training.blocks.length - 1}
             sportExercises={sportExercises}
-            isAdmin={isAdmin}
+            sportSlug={training.sportSlug ?? "box"}
             run={run}
           />
         ))}
@@ -270,14 +271,14 @@ function BlockCard({
   isFirst,
   isLast,
   sportExercises,
-  isAdmin,
+  sportSlug,
   run,
 }: {
   block: BlockDTO;
   isFirst: boolean;
   isLast: boolean;
   sportExercises: ExerciseDTO[];
-  isAdmin: boolean;
+  sportSlug: string;
   run: (fn: () => Promise<unknown>) => void;
 }) {
   const router = useRouter();
@@ -285,6 +286,16 @@ function BlockCard({
   const [lookupOpen, setLookupOpen] = useState(false);
   const [filter, setFilter] = useState("");
   const [note, setNote] = useState<string | null>(null);
+  const [newPrivate, setNewPrivate] = useState(false);
+
+  function createInCatalog() {
+    const name = filter.trim();
+    if (!name) return;
+    startAdd(async () => {
+      await createExercise({ sportSlug, name, category: block.category ?? undefined, isPrivate: newPrivate });
+      router.refresh();
+    });
+  }
 
   const inBlock = new Set(block.items.map((it) => it.exerciseId).filter(Boolean));
   const q = filter.trim().toLowerCase();
@@ -397,7 +408,10 @@ function BlockCard({
                       onClick={() => addFromCatalog(e)}
                       className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-2 text-left text-sm transition hover:bg-white disabled:opacity-40"
                     >
-                      <span className="min-w-0 truncate text-zinc-800">{e.name}</span>
+                      <span className="min-w-0 truncate text-zinc-800">
+                        {e.isPrivate && <span title="Soukromé">🔒 </span>}
+                        {e.name}
+                      </span>
                       <span className="shrink-0 text-xs text-zinc-400">
                         {e.category ? `${CATEGORY_LABELS[e.category as keyof typeof CATEGORY_LABELS] ?? e.category} · ` : ""}
                         {already ? "✓ v bloku" : `${e.defaultSec ?? 180}s`}
@@ -408,15 +422,28 @@ function BlockCard({
               )}
             </div>
             {note && <p className="mt-1 text-xs text-amber-600">{note}</p>}
+            {filter.trim() && (
+              <div className="mt-2 flex items-center gap-2 border-t border-zinc-200 pt-2">
+                <button
+                  type="button"
+                  onClick={createInCatalog}
+                  className="rounded-lg border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-100"
+                >
+                  + Vytvořit „{filter.trim()}"
+                </button>
+                <label className="flex items-center gap-1 text-xs text-zinc-500">
+                  <input type="checkbox" checked={newPrivate} onChange={(e) => setNewPrivate(e.target.checked)} className="h-3.5 w-3.5 rounded border-zinc-300 accent-zinc-900" />
+                  soukromé
+                </label>
+              </div>
+            )}
             <div className="mt-2 flex items-center justify-between">
               <button type="button" onClick={() => { setLookupOpen(false); setFilter(""); setNote(null); }} className="text-xs text-zinc-500 transition hover:text-zinc-800">
                 Zavřít
               </button>
-              {isAdmin && (
-                <Link href="/admin/cviky" className="text-xs font-medium text-zinc-500 transition hover:text-zinc-800">
-                  Upravit číselník →
-                </Link>
-              )}
+              <Link href="/cviky" className="text-xs font-medium text-zinc-500 transition hover:text-zinc-800">
+                Spravovat cviky →
+              </Link>
             </div>
           </div>
         ) : (
