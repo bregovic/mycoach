@@ -40,6 +40,8 @@ model User {
   activitySchedules ActivitySchedule[]
   scheduledTasks    ScheduledTask[]
   trainings         Training[]
+  packagesAuthored  Package[]          @relation("PackageAuthor")
+  subscriptions     Subscription[]
 }
 
 model Account {
@@ -218,26 +220,29 @@ model Activity {
   sportSlug String? // pokud vznikla z předpřipraveného sportu (budoucí napojení)
   createdAt DateTime @default(now())
 
-  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   tasks     ScheduledTask[]
   schedules ActivitySchedule[]
+  subElement SubscriptionElement?
 
   @@index([userId])
 }
 
 model ActivitySchedule {
-  id         String    @id @default(cuid())
-  userId     String
-  activityId String
-  weekdays   Int[] // 0=Ne … 6=So (JS Date.getDay)
-  startDate  DateTime  @db.Date
-  endDate    DateTime? @db.Date
-  active     Boolean   @default(true)
-  createdAt  DateTime  @default(now())
+  id           String    @id @default(cuid())
+  userId       String
+  activityId   String
+  weekdays     Int[] // 0=Ne … 6=So (JS Date.getDay); prázdné při intervalovém režimu
+  intervalDays Int? // pokud vyplněno: opakování po N dnech od startDate (místo weekdays)
+  startDate    DateTime  @db.Date
+  endDate      DateTime? @db.Date
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
 
-  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  activity Activity        @relation(fields: [activityId], references: [id], onDelete: Cascade)
-  tasks    ScheduledTask[]
+  user       User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activity   Activity             @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  tasks      ScheduledTask[]
+  subElement SubscriptionElement?
 
   @@index([userId])
   @@index([activityId])
@@ -318,4 +323,86 @@ model BlockItem {
   block Block @relation(fields: [blockId], references: [id], onDelete: Cascade)
 
   @@index([blockId])
+}
+
+// ---------------------------------------------------------------------------
+// Balíčky (programy) a odběry
+// Balíček = autorovaný, kategorizovaný bundle prvků s navrženou frekvencí
+// (např. „Ženská krása" → kadeřník, kosmetika, pedikúra). Uživatel si dá odběr,
+// přizpůsobí prvky/frekvenci a po potvrzení se mu vygenerují do kalendáře
+// (Activity + intervalový ActivitySchedule). Zrušení odběru je z kalendáře smaže.
+// ---------------------------------------------------------------------------
+
+model Package {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  subtitle    String?
+  description String?
+  category    String? // pro filtr ve vyhledávání (krasa | fitness | zdravi | …)
+  tags        String[] // volné štítky pro vyhledávání
+  icon        String? // emoji
+  color       String   @default("#18181b")
+  authorId    String? // autor (role trainer/admin); null = systémový
+  isFree      Boolean  @default(true)
+  priceCents  Int? // null = zdarma (platby zatím neřešíme)
+  published   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author        User?            @relation("PackageAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  elements      PackageElement[]
+  subscriptions Subscription[]
+
+  @@index([category])
+  @@index([published])
+}
+
+model PackageElement {
+  id                  String  @id @default(cuid())
+  packageId           String
+  order               Int     @default(0)
+  name                String // „Kadeřník"
+  note                String? // krátký popis
+  color               String  @default("#18181b")
+  defaultIntervalDays Int     @default(28) // navržená frekvence (po kolika dnech)
+  optional            Boolean @default(true) // smí uživatel vypnout
+
+  package Package @relation(fields: [packageId], references: [id], onDelete: Cascade)
+
+  @@index([packageId])
+}
+
+model Subscription {
+  id        String   @id @default(cuid())
+  userId    String
+  packageId String
+  active    Boolean  @default(true)
+  startDate DateTime @db.Date
+  createdAt DateTime @default(now())
+
+  user     User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  package  Package               @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  elements SubscriptionElement[]
+
+  @@unique([userId, packageId])
+  @@index([userId])
+}
+
+model SubscriptionElement {
+  id             String  @id @default(cuid())
+  subscriptionId String
+  elementId      String? // odkaz na zdrojový PackageElement (volné, kvůli změnám balíčku)
+  name           String
+  color          String  @default("#18181b")
+  enabled        Boolean @default(true)
+  intervalDays   Int     @default(28)
+  activityId     String? @unique // vygenerovaná aktivita v kalendáři
+  scheduleId     String? @unique // vygenerovaný intervalový rozvrh
+
+  subscription Subscription      @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  activity     Activity?         @relation(fields: [activityId], references: [id], onDelete: SetNull)
+  schedule     ActivitySchedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+
+  @@index([subscriptionId])
 }

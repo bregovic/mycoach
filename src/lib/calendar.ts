@@ -70,6 +70,37 @@ export function scheduleDatesInRange(
   return out;
 }
 
+/** Dny (dateKeys) opakování po `intervalDays` od startKey, spadající do rozsahu. */
+export function intervalDatesInRange(
+  startKey: string,
+  intervalDays: number,
+  endKey: string | null,
+  rangeStartKey: string,
+  rangeEndKey: string,
+): string[] {
+  if (intervalDays <= 0) return [];
+  const DAY = 86_400_000;
+  const start = keyToDate(startKey);
+  const rangeStart = keyToDate(rangeStartKey);
+  const hardEnd = endKey ? keyToDate(endKey) : null;
+  const rangeEnd = keyToDate(rangeEndKey);
+  const end = hardEnd && hardEnd < rangeEnd ? hardEnd : rangeEnd;
+
+  // Posuň na první výskyt ≥ začátek viditelného rozsahu (zachová fázi od startKey).
+  const cur = new Date(start);
+  if (cur < rangeStart) {
+    const steps = Math.ceil((rangeStart.getTime() - start.getTime()) / DAY / intervalDays);
+    cur.setUTCDate(cur.getUTCDate() + steps * intervalDays);
+  }
+
+  const out: string[] = [];
+  while (cur <= end) {
+    if (cur >= start) out.push(dateKey(cur));
+    cur.setUTCDate(cur.getUTCDate() + intervalDays);
+  }
+  return out;
+}
+
 /** "YYYY-MM" → {year, month0}; neplatné/prázdné → aktuální měsíc. */
 export function parseMonthParam(month: string | undefined): { year: number; month0: number } {
   const m = month?.match(/^(\d{4})-(\d{2})$/);

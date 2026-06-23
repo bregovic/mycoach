@@ -42,7 +42,7 @@ export default async function DashboardPage() {
       </header>
 
       <section className="mx-auto max-w-4xl px-6 py-12">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Link
             href="/trening"
             className="group flex flex-col rounded-2xl bg-zinc-900 p-6 text-white transition hover:bg-zinc-800"
@@ -73,6 +73,17 @@ export default async function DashboardPage() {
             <p className="mt-1 text-sm text-zinc-500">Skládej vlastní tréninky z bloků</p>
             <span className="mt-6 text-sm font-medium text-zinc-400 transition group-hover:text-zinc-700">
               Otevřít →
+            </span>
+          </Link>
+
+          <Link
+            href="/balicky"
+            className="group flex flex-col rounded-2xl border border-zinc-200 bg-white p-6 transition hover:border-zinc-300 hover:shadow-sm"
+          >
+            <h2 className="text-lg font-medium text-zinc-900">Balíčky</h2>
+            <p className="mt-1 text-sm text-zinc-500">Programy na míru → do kalendáře</p>
+            <span className="mt-6 text-sm font-medium text-zinc-400 transition group-hover:text-zinc-700">
+              Procházet →
             </span>
           </Link>
         </div>

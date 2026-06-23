@@ -2,7 +2,7 @@
 // Idempotentní – spoléhá na unique (scheduleId, date) + skipDuplicates.
 
 import { prisma } from "@/lib/prisma";
-import { keyToDate, scheduleDatesInRange } from "@/lib/calendar";
+import { keyToDate, scheduleDatesInRange, intervalDatesInRange } from "@/lib/calendar";
 
 export async function ensureScheduleTasks(
   userId: string,
@@ -24,7 +24,10 @@ export async function ensureScheduleTasks(
   for (const s of schedules) {
     const startKey = s.startDate.toISOString().slice(0, 10);
     const endKey = s.endDate ? s.endDate.toISOString().slice(0, 10) : null;
-    const dates = scheduleDatesInRange(s.weekdays, startKey, endKey, rangeStartKey, rangeEndKey);
+    const dates =
+      s.intervalDays && s.intervalDays > 0
+        ? intervalDatesInRange(startKey, s.intervalDays, endKey, rangeStartKey, rangeEndKey)
+        : scheduleDatesInRange(s.weekdays, startKey, endKey, rangeStartKey, rangeEndKey);
     for (const dk of dates) {
       rows.push({ userId, activityId: s.activityId, scheduleId: s.id, date: keyToDate(dk) });
     }

@@ -141,7 +141,13 @@ Engine je **sport-agnostický** — box je jen první „disciplína" (dataset).
 9. ⏭ Výběr sportu/aktivity v UI.
 10. ⏭ **Trenér ↔ klient**: role `trainer`, klient si vybere trenéra, trenér vidí jeho výsledky
     (`WorkoutLog`/`ScheduledTask`) a skládá mu tréninky (sdílení `Training`). Řez #2 plánu.
-11. ⏭ **Plány zdarma**: trenér/admin složí plán, uživatel si ho „nasadí" (`Enrollment`).
+11. 🔶 **Balíčky / programy** (`/balicky`, `/balicky/[slug]`): autorovaný bundle prvků
+    (`Package`/`PackageElement`) s kategorií, tagy, autorem, free/placené; uživatel si dá **odběr**
+    (`Subscription`/`SubscriptionElement`), zapne/vypne prvky + upraví **frekvenci** → potvrzení
+    vygeneruje **Activity + intervalový `ActivitySchedule`** do kalendáře; zrušení odběru je smaže.
+    Hotovo procházení/hledání + odběr; ⏭ autorský editor balíčků, ⏭ placené (Stripe).
+12. ⏭ **Plány zdarma (trénink)**: trenér/admin složí tréninkový plán, uživatel si ho „nasadí"
+    (`Enrollment`). Pozn.: časem nejspíš sjednotit s `Package` jako jeden „subscribable bundle".
 
 **Fáze 3 — monetizace (později):**
 12. ⏭ **Stripe**: placené plány/balíčky → entitlements (až bude o co stát).
