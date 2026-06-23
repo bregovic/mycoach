@@ -66,6 +66,7 @@ export default async function TrainingEditorPage({
       category: b.category,
       rounds: b.rounds,
       restSec: b.restSec,
+      restName: b.restName,
       items: b.items.map((it) => ({
         id: it.id,
         name: it.name,

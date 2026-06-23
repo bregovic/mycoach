@@ -30,6 +30,11 @@ export interface AuthoredBlock {
   rounds: number;
   restSec: number;
   items: AuthoredItem[];
+  // aktivní pauza mezi koly (kondiční cvik); není-li, klasické vydýchání
+  restName?: string | null;
+  restSpokenName?: string | null;
+  restVoiceText?: string | null;
+  restAudioKey?: string | null;
 }
 
 export interface AuthoredTraining {
@@ -89,7 +94,20 @@ export function compileTraining(t: AuthoredTraining): Segment[] {
       }
       // pauza mezi koly bloku (ne za posledním kolem)
       if (r < rounds - 1 && block.restSec > 0) {
-        out.push({ kind: "rest", phase, name: "Pauza · vydýchání", duration: block.restSec });
+        if (block.restName) {
+          // aktivní pauza – kondiční cvik
+          out.push({
+            kind: "rest",
+            phase,
+            name: block.restName,
+            spokenName: (block.restSpokenName ?? "").trim() || block.restName,
+            voiceText: `${(block.restSpokenName ?? "").trim() || block.restName}. ${block.restVoiceText ?? ""}`.trim(),
+            audioUrl: audioUrlOf(block.restAudioKey),
+            duration: block.restSec,
+          });
+        } else {
+          out.push({ kind: "rest", phase, name: "Pauza · vydýchání", duration: block.restSec });
+        }
       }
     }
 

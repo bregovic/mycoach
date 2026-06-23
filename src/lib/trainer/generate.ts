@@ -218,13 +218,12 @@ export function annotateSegments(out: Segment[]): void {
     if (out[i].kind === "rest") {
       // najít nejbližší další work
       const nw = out.slice(i + 1).find((s) => s.kind === "work");
-      if (nw) {
-        out[i].voiceText = `Pauza. Další kolo: ${nw.spokenName}. ${nw.voiceText ?? ""} ${coopHint(
-          nw.coop ?? "najednou",
-        )}`.trim();
-        out[i].nextName = nw.name;
-      } else {
-        out[i].voiceText = "Pauza. Poslední úsek se blíží.";
+      if (nw) out[i].nextName = nw.name;
+      // aktivní pauza (kondiční cvik) má vlastní pokyn → nepřepisovat
+      if (!out[i].voiceText) {
+        out[i].voiceText = nw
+          ? `Pauza. Další kolo: ${nw.spokenName}. ${nw.voiceText ?? ""} ${coopHint(nw.coop ?? "najednou")}`.trim()
+          : "Pauza. Poslední úsek se blíží.";
       }
     }
   }

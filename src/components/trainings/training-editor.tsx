@@ -12,6 +12,7 @@ import {
   deleteTraining,
   moveBlock,
   moveItem,
+  setBlockRest,
   updateBlock,
   updateItem,
   updateTrainingImage,
@@ -42,6 +43,7 @@ export interface BlockDTO {
   category: string | null;
   rounds: number;
   restSec: number;
+  restName: string | null;
   items: ItemDTO[];
 }
 export interface TrainingDTO {
@@ -290,7 +292,12 @@ function BlockCard({
   const [filter, setFilter] = useState("");
   const [note, setNote] = useState<string | null>(null);
   const [newPrivate, setNewPrivate] = useState(false);
+  const [restOpen, setRestOpen] = useState(false);
+  const [restFilter, setRestFilter] = useState("");
   const titleRef = useRef<HTMLInputElement>(null);
+  const restCandidates = sportExercises
+    .filter((e) => e.category === "conditioning" && e.name.toLowerCase().includes(restFilter.trim().toLowerCase()))
+    .slice(0, 30);
 
   // Při výběru kategorie předvyplň název bloku (jen je-li prázdný/výchozí),
   // dál ho lze normálně přepsat.
@@ -414,6 +421,61 @@ function BlockCard({
           </button>
         </div>
       </form>
+
+      {/* Mezi koly: klasická pauza nebo kondiční cvik */}
+      <div className="mt-3 rounded-lg bg-zinc-50 p-3 text-sm">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-zinc-600">
+            Mezi koly: <strong className="text-zinc-800">{block.restName ?? "Pauza (vydýchání)"}</strong>
+          </span>
+          <div className="flex items-center gap-3">
+            {block.restName && (
+              <button type="button" onClick={() => run(() => setBlockRest(block.id, null))} className="text-xs text-zinc-500 transition hover:text-zinc-800">
+                × zpět na pauzu
+              </button>
+            )}
+            <button type="button" onClick={() => setRestOpen((o) => !o)} className="text-xs font-medium text-zinc-600 transition hover:text-zinc-900">
+              {restOpen ? "Zavřít" : "Kondiční cvik"}
+            </button>
+          </div>
+        </div>
+        {restOpen && (
+          <div className="mt-2">
+            <input
+              autoFocus
+              value={restFilter}
+              onChange={(e) => setRestFilter(e.target.value)}
+              placeholder="Hledat kondiční cvik (kategorie Kondice)…"
+              className={input}
+            />
+            {restFilter.trim() ? (
+              <div className="mt-1 max-h-44 space-y-1 overflow-auto">
+                {restCandidates.length === 0 ? (
+                  <p className="px-1 py-2 text-xs text-zinc-400">Nic nenalezeno (zkus přidat cvik do kategorie Kondice).</p>
+                ) : (
+                  restCandidates.map((e) => (
+                    <button
+                      key={e.id}
+                      type="button"
+                      onClick={() => {
+                        setRestOpen(false);
+                        setRestFilter("");
+                        run(() => setBlockRest(block.id, e.id));
+                      }}
+                      className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition hover:bg-white"
+                    >
+                      <span className="min-w-0 truncate text-zinc-800">{e.name}</span>
+                      <span className="shrink-0 text-xs text-zinc-400">{e.defaultSec ?? 180}s</span>
+                    </button>
+                  ))
+                )}
+              </div>
+            ) : (
+              <p className="mt-1 px-1 py-1 text-xs text-zinc-400">Začni psát název cviku…</p>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Cviky v bloku */}
       <div className="mt-4 space-y-2 border-t border-zinc-100 pt-4">

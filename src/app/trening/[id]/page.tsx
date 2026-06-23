@@ -47,6 +47,10 @@ export default async function PresetTrainingPage({
       category: b.category,
       rounds: b.rounds,
       restSec: b.restSec,
+      restName: b.restName,
+      restSpokenName: b.restSpokenName,
+      restVoiceText: b.restVoiceText,
+      restAudioKey: b.restAudioKey,
       items: b.items.map((it) => ({
         name: it.name,
         spokenName: it.spokenName,

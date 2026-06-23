@@ -329,6 +329,11 @@ model Block {
   category   String? // warmup|combinations|bag_work|sparring|conditioning – barva/štítek
   rounds     Int      @default(1) // kolikrát blok zopakovat
   restSec    Int      @default(60) // pauza mezi koly bloku (0 = bez pauzy)
+  // Aktivní pauza mezi koly: místo vydýchání kondiční cvik (denormalizováno z Exercise)
+  restName       String?
+  restSpokenName String?
+  restVoiceText  String?
+  restAudioKey   String?
   createdAt  DateTime @default(now())
 
   training Training    @relation(fields: [trainingId], references: [id], onDelete: Cascade)

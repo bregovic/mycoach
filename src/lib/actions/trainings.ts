@@ -170,6 +170,39 @@ export async function updateBlock(input: {
   revalidate(block.trainingId);
 }
 
+/** Nastaví aktivní pauzu mezi koly = kondiční cvik (nebo null = klasické vydýchání). */
+export async function setBlockRest(blockId: string, exerciseId: string | null): Promise<void> {
+  const userId = await requireUserId();
+  const block = await prisma.block.findFirst({
+    where: { id: blockId, training: { userId } },
+    select: { trainingId: true },
+  });
+  if (!block) return;
+  if (!exerciseId) {
+    await prisma.block.update({
+      where: { id: blockId },
+      data: { restName: null, restSpokenName: null, restVoiceText: null, restAudioKey: null },
+    });
+  } else {
+    const ex = await prisma.exercise.findUnique({
+      where: { id: exerciseId },
+      select: { name: true, spokenName: true, voiceText: true, audioKey: true },
+    });
+    if (ex) {
+      await prisma.block.update({
+        where: { id: blockId },
+        data: {
+          restName: ex.name,
+          restSpokenName: ex.spokenName,
+          restVoiceText: ex.voiceText,
+          restAudioKey: ex.audioKey,
+        },
+      });
+    }
+  }
+  revalidate(block.trainingId);
+}
+
 export async function deleteBlock(id: string): Promise<void> {
   const userId = await requireUserId();
   const block = await prisma.block.findFirst({
