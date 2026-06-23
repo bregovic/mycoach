@@ -45,7 +45,7 @@ export default async function ClubDetailPage({ params }: { params: Promise<{ id:
     orderBy: [{ date: "asc" }, { startMin: "asc" }],
     include: {
       training: { select: { title: true } },
-      attendances: { select: { userId: true, status: true, user: { select: { name: true, email: true } } } },
+      attendances: { select: { userId: true, status: true, user: { select: { name: true, email: true, image: true } } } },
     },
   });
 
@@ -90,8 +90,8 @@ export default async function ClubDetailPage({ params }: { params: Promise<{ id:
         trainingId: s.trainingId,
         trainingTitle: s.training?.title ?? null,
         attendees: [
-          ...going.map((a) => ({ name: nameOf(a), status: "going" as const })),
-          ...excused.map((a) => ({ name: nameOf(a), status: "excused" as const })),
+          ...going.map((a) => ({ name: nameOf(a), image: a.user.image, status: "going" as const })),
+          ...excused.map((a) => ({ name: nameOf(a), image: a.user.image, status: "excused" as const })),
         ],
       };
     }),

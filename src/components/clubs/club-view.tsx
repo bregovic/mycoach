@@ -6,6 +6,7 @@ import { useState, useTransition, type FormEvent } from "react";
 import { WEEKDAYS, keyToDate } from "@/lib/calendar";
 import { minToHHMM, STATUS_LABEL, STATUS_TONE, type SessionStatus } from "@/lib/clubs";
 import { ImageUpload } from "@/components/image-upload";
+import { Avatar } from "@/components/avatar";
 import {
   acceptInvite,
   addScheduleRule,
@@ -46,7 +47,7 @@ export interface ClubDTO {
     myStatus: string | null; // going | excused | null
     trainingId: string | null;
     trainingTitle: string | null;
-    attendees: { name: string; status: "going" | "excused" }[];
+    attendees: { name: string; image: string | null; status: "going" | "excused" }[];
   }[];
   trainings: { id: string; title: string }[];
 }
@@ -200,21 +201,31 @@ export function ClubView({ club }: { club: ClubDTO }) {
                 {s.trainingTitle && <span>· 🥊 {s.trainingTitle}</span>}
               </div>
 
-              {/* Přehled kdo přijde / kdo se omluvil */}
-              {s.attendees.length > 0 && (
-                <div className="mt-2 space-y-0.5 text-xs">
-                  {s.attendees.some((a) => a.status === "going") && (
-                    <p className="text-zinc-500">
-                      <span className="font-medium text-green-700">Přijde:</span>{" "}
-                      {s.attendees.filter((a) => a.status === "going").map((a) => a.name).join(", ")}
-                    </p>
-                  )}
-                  {s.attendees.some((a) => a.status === "excused") && (
-                    <p className="text-zinc-500">
-                      <span className="font-medium text-red-700">Omluveni:</span>{" "}
-                      {s.attendees.filter((a) => a.status === "excused").map((a) => a.name).join(", ")}
-                    </p>
-                  )}
+              {/* Přehled kdo přijde / kdo se omluvil – s fotkami */}
+              {s.attendees.some((a) => a.status === "going") && (
+                <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                  <span className="text-xs font-medium text-green-700">Přijde:</span>
+                  {s.attendees
+                    .filter((a) => a.status === "going")
+                    .map((a, k) => (
+                      <span key={k} className="inline-flex items-center gap-1" title={a.name}>
+                        <Avatar src={a.image} name={a.name} size={22} />
+                        <span className="text-xs text-zinc-600">{a.name}</span>
+                      </span>
+                    ))}
+                </div>
+              )}
+              {s.attendees.some((a) => a.status === "excused") && (
+                <div className="mt-1 flex flex-wrap items-center gap-1.5 opacity-70">
+                  <span className="text-xs font-medium text-red-700">Omluveni:</span>
+                  {s.attendees
+                    .filter((a) => a.status === "excused")
+                    .map((a, k) => (
+                      <span key={k} className="inline-flex items-center gap-1" title={a.name}>
+                        <Avatar src={a.image} name={a.name} size={20} />
+                        <span className="text-xs text-zinc-500 line-through">{a.name}</span>
+                      </span>
+                    ))}
                 </div>
               )}
 
