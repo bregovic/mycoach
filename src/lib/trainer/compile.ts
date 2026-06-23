@@ -98,6 +98,10 @@ export function compileTraining(t: AuthoredTraining): Segment[] {
       }
     };
 
+    // Pauzu vkládej i mezi jednotlivé cviky, když je to zapnuté NEBO když má blok
+    // aktivní pauzu (kondiční cvik) – ten patří právě do pauz mezi cviky/kombinacemi.
+    const betweenItems = block.restBetweenItems || !!block.restName;
+
     const blockStartIdx = out.length;
     for (let r = 0; r < rounds; r++) {
       items.forEach((it, idx) => {
@@ -112,7 +116,7 @@ export function compileTraining(t: AuthoredTraining): Segment[] {
           audioUrl: audioUrlOf(it.audioKey),
         });
         // pauza i mezi cviky v kole (ne za posledním cvikem kola)
-        if (block.restBetweenItems && idx < items.length - 1) pushRest();
+        if (betweenItems && idx < items.length - 1) pushRest();
       });
       // pauza mezi koly bloku (ne za posledním kolem)
       if (r < rounds - 1) pushRest();

@@ -23,15 +23,6 @@ const STATE: Record<Segment["kind"], { ring: string; bar: string; text: string; 
   finish: { ring: "ring-amber-300", bar: "bg-amber-500", text: "text-amber-600", tag: "bg-amber-50 text-amber-700" },
 };
 
-// Jak se cvik dělá (coop) – řekne se po instrukci. „najednou" = individuální → nic.
-function coopHint(sg: Segment): string {
-  if (sg.kind !== "work") return "";
-  if (sg.coop === "v_pulce") return "V půlce kola se na znamení vyměníte.";
-  if (sg.coop === "stridave") return "Střídejte se.";
-  if (sg.coop === "cele_kolo") return "Celé kolo jeden, pak se vyměníte.";
-  return "";
-}
-
 function findNextWork(segs: Segment[], from: number): Segment | null {
   for (let j = from + 1; j < segs.length; j++) if (segs[j].kind === "work") return segs[j];
   return null;
@@ -154,18 +145,34 @@ export function Trainer({
     [audio, playCue],
   );
 
-  // Přečte instrukci úseku (nahraná MP3 má přednost před TTS). onDone se zavolá
-  // po dočtení (nebo hned, je-li ztišeno/prázdné).
+  // Coop pokyn (jak se cvik dělá) – přednostně tvůj MP3 cue, jinak hlas. Individuální = nic.
+  const announceCoop = useCallback(
+    (sg: Segment) => {
+      if (sg.kind !== "work") return;
+      if (sg.coop === "stridave") {
+        if (!playCue("switch")) speech.speak("Střídejte se.");
+      } else if (sg.coop === "v_pulce") {
+        if (!playCue("half_swap")) speech.speak("V půlce se na znamení vyměníte.");
+      } else if (sg.coop === "cele_kolo") {
+        if (!playCue("half_swap")) speech.speak("Celé kolo jeden, pak se vyměníte.");
+      }
+    },
+    [playCue, speech],
+  );
+
+  // Přečte instrukci úseku (nahraná MP3 má přednost před TTS). Po instrukci zazní
+  // coop pokyn. onDone se zavolá po dočtení (nebo hned, je-li ztišeno/prázdné).
   const readInstruction = useCallback(
     (sg: Segment, onDone?: () => void) => {
-      const hint = coopHint(sg); // jak se to dělá (střídat / vyměnit); individuální = ""
       if (sg.audioUrl) {
         if (speech.muted) {
           onDone?.();
           return;
         }
-        // po MP3 instrukci řekni coop pokyn (pokud je relevantní)
-        const after = () => (hint ? speech.speak(hint, onDone) : onDone?.());
+        const after = () => {
+          announceCoop(sg);
+          onDone?.();
+        };
         try {
           if (!instrRef.current) instrRef.current = new Audio();
           instrRef.current.pause();
@@ -179,10 +186,12 @@ export function Trainer({
         return;
       }
       const base = sg.kind === "work" ? `${sg.spokenName}. ${sg.voiceText ?? ""}` : sg.voiceText ?? "";
-      const text = hint ? `${base}. ${hint}` : base;
-      speech.speak(text, onDone);
+      speech.speak(base, () => {
+        announceCoop(sg);
+        onDone?.();
+      });
     },
-    [speech],
+    [speech, announceCoop],
   );
 
 
@@ -220,9 +229,15 @@ export function Trainer({
         return;
       }
       const sg = segs[i];
+      const kickoff = idxRef.current < 0; // úplný začátek tréninku
       setIndex(i);
       setTimeLeft(sg.duration);
-      playStartCue(sg);
+      // Na úplném začátku bez přípravy zahraj „start" (jinak round_start/gong).
+      if (kickoff && sg.kind === "work" && playCue("start")) {
+        /* zahráno „start" */
+      } else {
+        playStartCue(sg);
+      }
 
       if (sg.kind === "work") {
         // Instrukci buď zazněla už v pauze (předohlášení), nebo ji přečti teď.
@@ -257,7 +272,7 @@ export function Trainer({
         }
       }
     },
-    [playStartCue, readInstruction, speech],
+    [playStartCue, readInstruction, playCue, speech],
   );
 
   // jeden tick za sekundu (čte aktuální stav přes refy)
