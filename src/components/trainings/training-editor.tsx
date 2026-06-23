@@ -44,6 +44,7 @@ export interface BlockDTO {
   title: string;
   category: string | null;
   rounds: number;
+  prepareSec: number;
   restSec: number;
   restBetweenItems: boolean;
   restName: string | null;
@@ -331,6 +332,7 @@ function BlockCard({
         title: String(fd.get("title") ?? ""),
         category: String(fd.get("category") ?? "") || null,
         rounds: Number(fd.get("rounds") ?? 1),
+        prepareSec: Number(fd.get("prepareSec") ?? 0),
         restSec: Number(fd.get("restSec") ?? 60),
       }),
     );
@@ -375,6 +377,7 @@ function BlockCard({
               title: String(fd.get("title") ?? ""),
               category: String(fd.get("category") ?? "") || null,
               rounds: Number(fd.get("rounds") ?? 1),
+              prepareSec: Number(fd.get("prepareSec") ?? 0),
               restSec: Number(fd.get("restSec") ?? 60),
             }),
           );
@@ -393,7 +396,7 @@ function BlockCard({
               onBlur={(e) => saveBlock(e.currentTarget.form)}
               className="w-full rounded-lg border border-transparent bg-transparent px-1 py-1 text-lg font-medium text-zinc-900 outline-none transition hover:border-zinc-200 focus:border-zinc-400"
             />
-            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
               <div>
                 <label className={label}>Kategorie</label>
                 <select
@@ -418,6 +421,10 @@ function BlockCard({
               <div>
                 <label className={label}>Pauza mezi koly (s)</label>
                 <input name="restSec" type="number" min={0} max={600} defaultValue={block.restSec} onBlur={(e) => saveBlock(e.currentTarget.form)} className={`${input} mt-1`} />
+              </div>
+              <div>
+                <label className={label}>Příprava (s)</label>
+                <input name="prepareSec" type="number" min={0} max={600} defaultValue={block.prepareSec} onBlur={(e) => saveBlock(e.currentTarget.form)} placeholder="např. bandáže" className={`${input} mt-1`} />
               </div>
             </div>
           </div>

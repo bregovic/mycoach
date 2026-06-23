@@ -28,6 +28,7 @@ export interface AuthoredBlock {
   title: string;
   category?: string | null;
   rounds: number;
+  prepareSec?: number;
   restSec: number;
   restBetweenItems?: boolean;
   items: AuthoredItem[];
@@ -79,6 +80,12 @@ export function compileTraining(t: AuthoredTraining): Segment[] {
     const rounds = Math.max(1, block.rounds || 1);
     const items = block.items.filter((it) => (it.durationSec ?? 0) > 0);
     if (items.length === 0) continue;
+
+    // Příprava před blokem (např. čas na bandáže před kombinacemi).
+    const blockPrep = Number.isFinite(block.prepareSec) ? Math.max(0, block.prepareSec as number) : 0;
+    if (blockPrep > 0) {
+      out.push({ kind: "rest", phase, name: `Příprava — ${block.title}`, duration: blockPrep });
+    }
 
     // Pauza bloku – aktivní (kondiční cvik) nebo klasické vydýchání.
     const pushRest = () => {

@@ -150,6 +150,7 @@ export async function updateBlock(input: {
   title: string;
   category?: string | null;
   rounds: number;
+  prepareSec?: number;
   restSec: number;
   restBetweenItems?: boolean;
 }): Promise<void> {
@@ -167,6 +168,7 @@ export async function updateBlock(input: {
       title: str(input.title, 60) || "Blok",
       category,
       rounds: clampInt(input.rounds, 1, 50, 1),
+      prepareSec: clampInt(input.prepareSec, 0, 600, 0),
       restSec: clampInt(input.restSec, 0, 600, 60),
       // restBetweenItems měníme jen když je výslovně zadané (jinak zachovej stav)
       ...(input.restBetweenItems !== undefined ? { restBetweenItems: input.restBetweenItems } : {}),
