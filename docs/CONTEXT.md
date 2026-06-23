@@ -1,6 +1,6 @@
 # MyCoach — kontext a směřování
 
-> Stav k **2026-06-17**. Tento dokument je živý přehled: co je hotové, jak to běží a kam míříme. Aktualizuj při větších změnách.
+> Stav k **2026-06-23**. Tento dokument je živý přehled: co je hotové, jak to běží a kam míříme. Aktualizuj při větších změnách.
 
 ---
 
@@ -120,8 +120,8 @@ Engine je **sport-agnostický** — box je jen první „disciplína" (dataset).
 **Fáze 1 — osobní hodnota (teď):**
 1. ✅ Kostra + přihlášení + DB.
 2. ✅ Hlasový trénink (`/trening`).
-3. 🔶 **Uložit odcvičený trénink** do `WorkoutLog`: ✅ splnění úkolu v kalendáři založí `WorkoutLog`;
-   ⏭ uložení přímo po dokončení `/trening`.
+3. ✅ **Uložit odcvičený trénink** do `WorkoutLog`: splnění úkolu v kalendáři založí `WorkoutLog`
+   i přirozené dokončení tréninku v přehrávači (generický `/trening` i autorovaný `/trening/[id]`).
 4. ✅ **Tracker váhy** (`BodyMetric`): zápis váhy/% tuku + **graf vývoje** (Recharts) na `/profil`.
 5. ✅ **Profil** uživatele (`/profil`): výška, rok narození, pohlaví, cíl, jednotky (upsert do `Profile`)
    + přehledové dlaždice (aktuální váha, výška, věk, **BMI** vč. kategorie — `src/lib/health.ts`).
@@ -130,15 +130,23 @@ Engine je **sport-agnostický** — box je jen první „disciplína" (dataset).
    Modely `Activity`/`ActivitySchedule`/`ScheduledTask`; logika `src/lib/calendar*.ts`,
    akce `src/lib/actions/calendar.ts`, UI `src/components/calendar/`.
 
+7. ✅ **Strukturované (autorované) tréninky** (`/treninky`, `/treninky/[id]`): model
+   `Training → Block → BlockItem`, editor (bloky = kategorie/kola/pauza; cviky = délka/coop/
+   mluvený název/pokyn, řazení), kompilátor `compileTraining → Segment[]` krmí stávající přehrávač
+   (`/trening/[id]`). Zatím „jen pro sebe" (autor = přihlášený uživatel).
+
 **Fáze 2 — obsah a sporty:**
-6. ⏭ Přesun cviků z JSON do DB (`Sport` + `Exercise`); **více sportů** (datově řízené disciplíny).
-7. ⏭ Výběr sportu/aktivity v UI.
-8. ⏭ **Plány zdarma**: trenér/admin složí plán, uživatel si ho „nasadí" (`Enrollment`).
+8. 🔶 Přesun cviků z JSON do DB (`Sport` + `Exercise`); **více sportů**. *(Autorované tréninky už
+   žijí v DB, ale cviky jsou inline v `BlockItem`; generátor stále čte `box-drills.json`.)*
+9. ⏭ Výběr sportu/aktivity v UI.
+10. ⏭ **Trenér ↔ klient**: role `trainer`, klient si vybere trenéra, trenér vidí jeho výsledky
+    (`WorkoutLog`/`ScheduledTask`) a skládá mu tréninky (sdílení `Training`). Řez #2 plánu.
+11. ⏭ **Plány zdarma**: trenér/admin složí plán, uživatel si ho „nasadí" (`Enrollment`).
 
 **Fáze 3 — monetizace (později):**
-9. ⏭ **Stripe**: placené plány/balíčky → entitlements (až bude o co stát).
-10. ⏭ **Marketplace** trenérů + výplaty (Stripe Connect).
-11. ⏭ **Plán na míru** po konzultaci (poptávka → konzultace → dodání).
+12. ⏭ **Stripe**: placené plány/balíčky → entitlements (až bude o co stát).
+13. ⏭ **Marketplace** trenérů + výplaty (Stripe Connect).
+14. ⏭ **Plán na míru** po konzultaci (poptávka → konzultace → dodání).
 
 **Drobnosti / UX dluh:**
 - Wake-lock na mobilu (aby nezhasla obrazovka během tréninku).
