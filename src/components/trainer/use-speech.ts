@@ -11,7 +11,7 @@ export interface SpeechState {
   setMuted: (m: boolean) => void;
   rate: number;
   setRate: (r: number) => void;
-  speak: (text: string) => void;
+  speak: (text: string, onEnd?: () => void) => void;
   cancel: () => void;
   pause: () => void;
   resume: () => void;
@@ -65,9 +65,15 @@ export function useSpeech(): SpeechState {
     };
   }, []);
 
-  const speak = useCallback((text: string) => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-    if (mutedRef.current || !text.trim()) return;
+  const speak = useCallback((text: string, onEnd?: () => void) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      onEnd?.();
+      return;
+    }
+    if (mutedRef.current || !text.trim()) {
+      onEnd?.();
+      return;
+    }
     const clean = text.replace(/&/g, " a ").replace(/\s+/g, " ").trim();
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(clean);
@@ -81,6 +87,10 @@ export function useSpeech(): SpeechState {
     u.rate = rateRef.current;
     u.pitch = 1;
     u.volume = 1;
+    if (onEnd) {
+      u.onend = () => onEnd();
+      u.onerror = () => onEnd();
+    }
     window.speechSynthesis.speak(u);
   }, []);
 

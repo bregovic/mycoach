@@ -102,6 +102,12 @@ export function Trainer({
   const cuesRef = useRef<Record<string, string[]>>(cues ?? {});
   cuesRef.current = cues ?? {};
 
+  // Lead-in: u pracovního úseku se nejdřív přečte instrukce, pak „start" a teprve
+  // pak běží odpočet (aby se nepřekrývaly).
+  const [leadIn, setLeadIn] = useState(false);
+  const leadInRef = useRef(false);
+  const leadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Přehraje náhodný uživatelský zvukový pokyn daného typu. Vrací, zda něco hrálo.
   const playCue = useCallback((type: string): boolean => {
     const arr = cuesRef.current[type];
@@ -117,41 +123,62 @@ export function Trainer({
     return true;
   }, []);
 
-  const announce = useCallback(
+  // „Start" zvuk úseku – nahraný technický cue, jinak gong.
+  const playStartCue = useCallback(
     (sg: Segment) => {
-      // Technický cue podle typu úseku (náhradou za gong, pokud je nahraný).
       let cuePlayed = false;
       if (sg.kind === "prepare") cuePlayed = playCue("start");
       else if (sg.kind === "work") cuePlayed = playCue("round_start");
       else if (sg.kind === "rest") cuePlayed = playCue("round_end") || playCue("rest");
       else if (sg.kind === "finish") cuePlayed = playCue("finish");
       if (!cuePlayed) audio.playBell(sg.kind === "prepare" || sg.kind === "finish");
-      // Nahraná MP3 instrukce má přednost před čtením (TTS).
+    },
+    [audio, playCue],
+  );
+
+  // Přečte instrukci úseku (nahraná MP3 má přednost před TTS). onDone se zavolá
+  // po dočtení (nebo hned, je-li ztišeno/prázdné).
+  const readInstruction = useCallback(
+    (sg: Segment, onDone?: () => void) => {
       if (sg.audioUrl) {
-        if (!speech.muted) {
-          try {
-            if (!instrRef.current) instrRef.current = new Audio();
-            instrRef.current.pause();
-            instrRef.current.src = sg.audioUrl;
-            void instrRef.current.play().catch(() => {});
-          } catch {
-            /* ignore */
-          }
+        if (speech.muted) {
+          onDone?.();
+          return;
+        }
+        try {
+          if (!instrRef.current) instrRef.current = new Audio();
+          instrRef.current.pause();
+          instrRef.current.onended = onDone ? () => onDone() : null;
+          instrRef.current.onerror = onDone ? () => onDone() : null;
+          instrRef.current.src = sg.audioUrl;
+          void instrRef.current.play().catch(() => onDone?.());
+        } catch {
+          onDone?.();
         }
         return;
       }
-      const text =
-        sg.kind === "work"
-          ? `Kolo ${sg.roundNum}. ${sg.spokenName}. ${sg.voiceText ?? ""}`
-          : sg.voiceText ?? "";
-      speech.speak(text);
+      const text = sg.kind === "work" ? `${sg.spokenName}. ${sg.voiceText ?? ""}` : sg.voiceText ?? "";
+      speech.speak(text, onDone);
     },
-    [audio, speech, playCue],
+    [speech],
+  );
+
+  // Zopakování pokynu (tlačítko ↻) – cue + instrukce naráz.
+  const announce = useCallback(
+    (sg: Segment) => {
+      playStartCue(sg);
+      readInstruction(sg);
+    },
+    [playStartCue, readInstruction],
   );
 
   const goTo = useCallback(
     (i: number) => {
       const segs = segsRef.current;
+      if (leadTimerRef.current) {
+        clearTimeout(leadTimerRef.current);
+        leadTimerRef.current = null;
+      }
       if (i < 0 || i >= segs.length) {
         // Konec přehrávání. Pokud trénink doběhl přirozeně (ne ručním ukončením),
         // ulož ho jednou do historie.
@@ -167,17 +194,44 @@ export function Trainer({
             }).catch(() => {});
           }
         }
+        leadInRef.current = false;
+        setLeadIn(false);
         setRunning(false);
         setIndex(-1);
         setSegments([]);
         speech.cancel();
         return;
       }
+      const sg = segs[i];
       setIndex(i);
-      setTimeLeft(segs[i].duration);
-      announce(segs[i]);
+      setTimeLeft(sg.duration);
+      if (sg.kind === "work") {
+        // Nejdřív přečti instrukci, pak „start" + spusť odpočet.
+        leadInRef.current = true;
+        setLeadIn(true);
+        let used = false;
+        const done = () => {
+          if (used) return;
+          used = true;
+          if (leadTimerRef.current) {
+            clearTimeout(leadTimerRef.current);
+            leadTimerRef.current = null;
+          }
+          if (idxRef.current !== i) return; // mezitím skip/ukončení
+          playStartCue(sg);
+          leadInRef.current = false;
+          setLeadIn(false);
+        };
+        readInstruction(sg, done);
+        leadTimerRef.current = setTimeout(done, 12000); // pojistka
+      } else {
+        leadInRef.current = false;
+        setLeadIn(false);
+        playStartCue(sg);
+        readInstruction(sg);
+      }
     },
-    [announce, speech],
+    [playStartCue, readInstruction, speech],
   );
 
   // jeden tick za sekundu (čte aktuální stav přes refy)
@@ -186,6 +240,7 @@ export function Trainer({
     const segs = segsRef.current;
     const sg = segs[i];
     if (!sg) return;
+    if (leadInRef.current) return; // čekáme na dočtení instrukce
     const next = tlRef.current - 1;
     if (next <= 0) {
       goTo(i + 1);
@@ -231,10 +286,8 @@ export function Trainer({
     audio.unlock();
     segsRef.current = segs;
     setSegments(segs);
-    setIndex(0);
-    setTimeLeft(segs[0].duration);
     setRunning(true);
-    announce(segs[0]);
+    goTo(0);
   };
 
   const togglePlay = () => {
@@ -252,6 +305,12 @@ export function Trainer({
   };
 
   const reset = () => {
+    if (leadTimerRef.current) {
+      clearTimeout(leadTimerRef.current);
+      leadTimerRef.current = null;
+    }
+    leadInRef.current = false;
+    setLeadIn(false);
     setRunning(false);
     setIndex(-1);
     setSegments([]);
@@ -440,6 +499,7 @@ export function Trainer({
             {seg && phaseLabel(seg)}
             {seg?.kind === "work" && seg.roundNum ? ` · kolo ${seg.roundNum}/${seg.totalRoundsInPhase}` : ""}
           </div>
+          {leadIn && <div className="mt-1 text-xs font-medium text-zinc-400">📢 Instrukce… odpočet začne po ní</div>}
           <div className={`mt-2 font-bold tabular-nums tracking-tight ${st.text} text-[clamp(4.5rem,20vw,8rem)] leading-none`}>
             {formatTime(timeLeft)}
           </div>
