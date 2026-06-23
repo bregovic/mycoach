@@ -39,6 +39,8 @@ type Row = {
   enabled: boolean;
   intervalDays: number;
   custom: boolean;
+  lastVisit?: string; // poslední návštěva (YYYY-MM-DD), nepovinné
+  nextVisit?: string; // další (první v kalendáři) – auto z poslední + frekvence, editovatelné
 };
 
 function intervalLabel(days: number): string {
@@ -47,6 +49,13 @@ function intervalLabel(days: number): string {
     return w === 1 ? "týdně" : `po ${w} týdnech`;
   }
   return days === 1 ? "denně" : `po ${days} dnech`;
+}
+
+/** Přičte dny k datu YYYY-MM-DD (v UTC). */
+function addDays(key: string, days: number): string {
+  const d = new Date(key + "T00:00:00.000Z");
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
 }
 
 export function PackageSubscribe({
@@ -132,6 +141,7 @@ export function PackageSubscribe({
       color: r.color,
       enabled: r.optional ? r.enabled : true,
       intervalDays: r.intervalDays,
+      startKey: r.nextVisit || undefined,
     }));
     startTransition(async () => {
       await subscribeToPackage(packageId, selections);
@@ -204,11 +214,46 @@ export function PackageSubscribe({
                       max={365}
                       value={row.intervalDays}
                       disabled={!on}
-                      onChange={(e) => patch(row.key, { intervalDays: Number(e.target.value) || 1 })}
+                      onChange={(e) => {
+                        const iv = Number(e.target.value) || 1;
+                        patch(row.key, {
+                          intervalDays: iv,
+                          ...(row.lastVisit ? { nextVisit: addDays(row.lastVisit, iv) } : {}),
+                        });
+                      }}
                       className="w-20 rounded-lg border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 outline-none transition focus:border-zinc-500 disabled:bg-zinc-100"
                     />
                     <span className="text-xs text-zinc-500">dní → {intervalLabel(row.intervalDays)}</span>
                   </div>
+
+                  {on && (
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                      <label className="flex items-center gap-1 text-zinc-500">
+                        Poslední návštěva
+                        <input
+                          type="date"
+                          value={row.lastVisit ?? ""}
+                          onChange={(e) => {
+                            const lv = e.target.value;
+                            patch(row.key, {
+                              lastVisit: lv,
+                              ...(lv ? { nextVisit: addDays(lv, row.intervalDays) } : {}),
+                            });
+                          }}
+                          className="rounded-lg border border-zinc-300 bg-white px-2 py-1 outline-none focus:border-zinc-500"
+                        />
+                      </label>
+                      <label className="flex items-center gap-1 text-zinc-500">
+                        Další (do kalendáře)
+                        <input
+                          type="date"
+                          value={row.nextVisit ?? ""}
+                          onChange={(e) => patch(row.key, { nextVisit: e.target.value })}
+                          className="rounded-lg border border-zinc-300 bg-white px-2 py-1 outline-none focus:border-zinc-500"
+                        />
+                      </label>
+                    </div>
+                  )}
                 </div>
 
                 {row.custom && (

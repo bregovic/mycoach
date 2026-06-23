@@ -28,6 +28,7 @@ export interface ElementSelection {
   color: string;
   enabled: boolean;
   intervalDays: number;
+  startKey?: string; // datum první návštěvy v kalendáři (YYYY-MM-DD); jinak dnešek
 }
 
 /** Smaže existující odběr balíčku i jím vygenerované aktivity (vč. úkolů). */
@@ -87,11 +88,13 @@ export async function subscribeToPackage(
       });
       continue;
     }
+    const elStart =
+      sel.startKey && /^\d{4}-\d{2}-\d{2}$/.test(sel.startKey) ? keyToDate(sel.startKey) : start;
     const activity = await prisma.activity.create({
       data: { userId, name, color: color(sel.color) },
     });
     const schedule = await prisma.activitySchedule.create({
-      data: { userId, activityId: activity.id, weekdays: [], intervalDays: interval, startDate: start },
+      data: { userId, activityId: activity.id, weekdays: [], intervalDays: interval, startDate: elStart },
     });
     await prisma.subscriptionElement.create({
       data: {
