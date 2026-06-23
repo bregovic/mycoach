@@ -16,6 +16,8 @@ import {
   updateItem,
   updateTrainingImage,
   updateTrainingMeta,
+  uploadItemAudio,
+  removeItemAudio,
 } from "@/lib/actions/trainings";
 import { compileTraining } from "@/lib/trainer/compile";
 import { workoutTotals, formatTime } from "@/lib/trainer/generate";
@@ -32,6 +34,7 @@ export interface ItemDTO {
   coop: string | null;
   durationSec: number;
   exerciseId: string | null;
+  audioKey: string | null;
 }
 export interface BlockDTO {
   id: string;
@@ -300,6 +303,21 @@ function BlockCard({
     }
   }
 
+  // Auto-uložení bloku (změna kategorie/času se projeví hned, bez tlačítka).
+  function saveBlock(form: HTMLFormElement | null) {
+    if (!form) return;
+    const fd = new FormData(form);
+    run(() =>
+      updateBlock({
+        id: block.id,
+        title: String(fd.get("title") ?? ""),
+        category: String(fd.get("category") ?? "") || null,
+        rounds: Number(fd.get("rounds") ?? 1),
+        restSec: Number(fd.get("restSec") ?? 60),
+      }),
+    );
+  }
+
   function createInCatalog() {
     const name = filter.trim();
     if (!name) return;
@@ -354,12 +372,21 @@ function BlockCard({
               ref={titleRef}
               name="title"
               defaultValue={block.title}
+              onBlur={(e) => saveBlock(e.currentTarget.form)}
               className="w-full rounded-lg border border-transparent bg-transparent px-1 py-1 text-lg font-medium text-zinc-900 outline-none transition hover:border-zinc-200 focus:border-zinc-400"
             />
             <div className="mt-3 grid gap-3 sm:grid-cols-3">
               <div>
                 <label className={label}>Kategorie</label>
-                <select name="category" defaultValue={block.category ?? ""} className={`${input} mt-1`}>
+                <select
+                  name="category"
+                  defaultValue={block.category ?? ""}
+                  onChange={(e) => {
+                    onCategoryChange(e.target.value);
+                    saveBlock(e.currentTarget.form);
+                  }}
+                  className={`${input} mt-1`}
+                >
                   <option value="">— bez —</option>
                   {CATEGORY_ORDER.map((k) => (
                     <option key={k} value={k}>{CATEGORY_LABELS[k]}</option>
@@ -368,11 +395,11 @@ function BlockCard({
               </div>
               <div>
                 <label className={label}>Kol (opakování)</label>
-                <input name="rounds" type="number" min={1} max={50} defaultValue={block.rounds} className={`${input} mt-1`} />
+                <input name="rounds" type="number" min={1} max={50} defaultValue={block.rounds} onBlur={(e) => saveBlock(e.currentTarget.form)} className={`${input} mt-1`} />
               </div>
               <div>
                 <label className={label}>Pauza mezi koly (s)</label>
-                <input name="restSec" type="number" min={0} max={600} defaultValue={block.restSec} className={`${input} mt-1`} />
+                <input name="restSec" type="number" min={0} max={600} defaultValue={block.restSec} onBlur={(e) => saveBlock(e.currentTarget.form)} className={`${input} mt-1`} />
               </div>
             </div>
           </div>
@@ -552,6 +579,34 @@ function ItemRow({
               <label className={label}>Hlasový pokyn</label>
               <input name="voiceText" defaultValue={item.voiceText ?? ""} placeholder="Detailní pokyn čtený v přehrávači" className={`${input} mt-1`} />
             </div>
+            <div className="rounded-lg bg-white p-2">
+              <span className={label}>MP3 instrukce (přehraje se místo čtení)</span>
+              {item.audioKey ? (
+                <div className="mt-1 flex flex-wrap items-center gap-3">
+                  {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                  <audio controls src={`/api/exercise-audio?key=${encodeURIComponent(item.audioKey)}`} className="h-8 max-w-full" />
+                  <button type="button" onClick={() => run(() => removeItemAudio(item.id))} className="text-xs text-red-600 transition hover:text-red-700">Odebrat MP3</button>
+                </div>
+              ) : (
+                <label className="mt-1 inline-flex cursor-pointer items-center rounded-lg border border-dashed border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-600 transition hover:border-zinc-400 hover:bg-zinc-50">
+                  + Nahrát MP3
+                  <input
+                    type="file"
+                    accept="audio/mpeg,.mp3"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      e.target.value = "";
+                      if (!f) return;
+                      const fd = new FormData();
+                      fd.set("itemId", item.id);
+                      fd.set("file", f);
+                      run(() => uploadItemAudio(fd));
+                    }}
+                  />
+                </label>
+              )}
+            </div>
             <div className="flex items-center justify-end gap-3">
               <button type="button" onClick={() => setOpen(false)} className="text-xs text-zinc-500 transition hover:text-zinc-800">Zavřít</button>
               <button type="submit" className="rounded-lg bg-zinc-900 px-4 py-2 text-xs font-medium text-white transition hover:bg-zinc-800">Uložit cvik</button>
@@ -564,6 +619,7 @@ function ItemRow({
               <p className="mt-0.5 text-xs text-zinc-500">
                 {item.durationSec}s · {COOP_LABELS[item.coop ?? "najednou"] ?? "Najednou"}
                 {item.exerciseId ? " · z číselníku" : ""}
+                {item.audioKey ? " · 🔊 MP3" : ""}
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-3">

@@ -74,6 +74,7 @@ export default async function TrainingEditorPage({
         coop: it.coop,
         durationSec: it.durationSec,
         exerciseId: it.exerciseId,
+        audioKey: it.audioKey,
       })),
     })),
   };

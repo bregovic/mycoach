@@ -6,6 +6,9 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { CATEGORY_ORDER } from "@/lib/trainer/types";
 import { dateKey, keyToDate } from "@/lib/calendar";
+import { storage } from "@/lib/storage";
+
+const ITEM_AUDIO_PREFIX = "mycoach/exercise-audio";
 
 async function requireUserId(): Promise<string> {
   const session = await auth();
@@ -285,6 +288,38 @@ export async function updateItem(input: {
       durationSec: clampInt(input.durationSec, 5, 1800, 180),
     },
   });
+  revalidate(item.block.trainingId);
+}
+
+/** Nahraje MP3 instrukci přímo k položce bloku. FormData: itemId + file. */
+export async function uploadItemAudio(formData: FormData): Promise<void> {
+  const userId = await requireUserId();
+  const id = String(formData.get("itemId") ?? "");
+  const file = formData.get("file");
+  if (!(file instanceof File) || !id) return;
+  const item = await prisma.blockItem.findFirst({
+    where: { id, block: { training: { userId } } },
+    select: { id: true, audioKey: true, block: { select: { trainingId: true } } },
+  });
+  if (!item) return;
+  const okType = file.type === "audio/mpeg" || file.name.toLowerCase().endsWith(".mp3");
+  if (!okType || file.size === 0 || file.size > 8 * 1024 * 1024) return;
+  const buf = Buffer.from(await file.arrayBuffer());
+  const key = await storage.save(buf, file.name || "instrukce.mp3", ITEM_AUDIO_PREFIX);
+  if (item.audioKey) await storage.delete(item.audioKey);
+  await prisma.blockItem.update({ where: { id }, data: { audioKey: key } });
+  revalidate(item.block.trainingId);
+}
+
+export async function removeItemAudio(id: string): Promise<void> {
+  const userId = await requireUserId();
+  const item = await prisma.blockItem.findFirst({
+    where: { id, block: { training: { userId } } },
+    select: { id: true, audioKey: true, block: { select: { trainingId: true } } },
+  });
+  if (!item) return;
+  if (item.audioKey) await storage.delete(item.audioKey);
+  await prisma.blockItem.update({ where: { id }, data: { audioKey: null } });
   revalidate(item.block.trainingId);
 }
 
