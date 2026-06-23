@@ -35,6 +35,7 @@ export default async function PresetTrainingPage({
       category: b.category,
       rounds: b.rounds,
       restSec: b.restSec,
+      restBetweenItems: b.restBetweenItems,
       restName: b.restName,
       restSpokenName: b.restSpokenName,
       restVoiceText: b.restVoiceText,

@@ -149,6 +149,7 @@ export async function updateBlock(input: {
   category?: string | null;
   rounds: number;
   restSec: number;
+  restBetweenItems?: boolean;
 }): Promise<void> {
   const userId = await requireUserId();
   const category =
@@ -165,6 +166,7 @@ export async function updateBlock(input: {
       category,
       rounds: clampInt(input.rounds, 1, 50, 1),
       restSec: clampInt(input.restSec, 0, 600, 60),
+      restBetweenItems: Boolean(input.restBetweenItems),
     },
   });
   revalidate(block.trainingId);

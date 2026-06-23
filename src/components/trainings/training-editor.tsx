@@ -45,6 +45,7 @@ export interface BlockDTO {
   category: string | null;
   rounds: number;
   restSec: number;
+  restBetweenItems: boolean;
   restName: string | null;
   restAudioKey: string | null;
   items: ItemDTO[];
@@ -325,6 +326,7 @@ function BlockCard({
         category: String(fd.get("category") ?? "") || null,
         rounds: Number(fd.get("rounds") ?? 1),
         restSec: Number(fd.get("restSec") ?? 60),
+        restBetweenItems: fd.get("restBetweenItems") === "on",
       }),
     );
   }
@@ -369,6 +371,7 @@ function BlockCard({
               category: String(fd.get("category") ?? "") || null,
               rounds: Number(fd.get("rounds") ?? 1),
               restSec: Number(fd.get("restSec") ?? 60),
+              restBetweenItems: fd.get("restBetweenItems") === "on",
             }),
           );
         }}
@@ -413,6 +416,16 @@ function BlockCard({
                 <input name="restSec" type="number" min={0} max={600} defaultValue={block.restSec} onBlur={(e) => saveBlock(e.currentTarget.form)} className={`${input} mt-1`} />
               </div>
             </div>
+            <label className="mt-3 flex items-center gap-2 text-sm text-zinc-700">
+              <input
+                type="checkbox"
+                name="restBetweenItems"
+                defaultChecked={block.restBetweenItems}
+                onChange={(e) => saveBlock(e.currentTarget.form)}
+                className="h-4 w-4 rounded border-zinc-300 accent-zinc-900"
+              />
+              Pauza i mezi cviky v kole
+            </label>
           </div>
         </div>
 

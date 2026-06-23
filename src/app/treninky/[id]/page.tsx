@@ -66,6 +66,7 @@ export default async function TrainingEditorPage({
       category: b.category,
       rounds: b.rounds,
       restSec: b.restSec,
+      restBetweenItems: b.restBetweenItems,
       restName: b.restName,
       restAudioKey: b.restAudioKey,
       items: b.items.map((it) => ({

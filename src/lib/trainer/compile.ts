@@ -29,6 +29,7 @@ export interface AuthoredBlock {
   category?: string | null;
   rounds: number;
   restSec: number;
+  restBetweenItems?: boolean;
   items: AuthoredItem[];
   // aktivní pauza mezi koly (kondiční cvik); není-li, klasické vydýchání
   restName?: string | null;
@@ -78,9 +79,27 @@ export function compileTraining(t: AuthoredTraining): Segment[] {
     const items = block.items.filter((it) => (it.durationSec ?? 0) > 0);
     if (items.length === 0) continue;
 
+    // Pauza bloku – aktivní (kondiční cvik) nebo klasické vydýchání.
+    const pushRest = () => {
+      if (block.restSec <= 0) return;
+      if (block.restName) {
+        out.push({
+          kind: "rest",
+          phase,
+          name: block.restName,
+          spokenName: (block.restSpokenName ?? "").trim() || block.restName,
+          voiceText: `${(block.restSpokenName ?? "").trim() || block.restName}. ${block.restVoiceText ?? ""}`.trim(),
+          audioUrl: audioUrlOf(block.restAudioKey),
+          duration: block.restSec,
+        });
+      } else {
+        out.push({ kind: "rest", phase, name: "Pauza · vydýchání", duration: block.restSec });
+      }
+    };
+
     const blockStartIdx = out.length;
     for (let r = 0; r < rounds; r++) {
-      for (const it of items) {
+      items.forEach((it, idx) => {
         out.push({
           kind: "work",
           phase,
@@ -91,24 +110,11 @@ export function compileTraining(t: AuthoredTraining): Segment[] {
           duration: it.durationSec,
           audioUrl: audioUrlOf(it.audioKey),
         });
-      }
+        // pauza i mezi cviky v kole (ne za posledním cvikem kola)
+        if (block.restBetweenItems && idx < items.length - 1) pushRest();
+      });
       // pauza mezi koly bloku (ne za posledním kolem)
-      if (r < rounds - 1 && block.restSec > 0) {
-        if (block.restName) {
-          // aktivní pauza – kondiční cvik
-          out.push({
-            kind: "rest",
-            phase,
-            name: block.restName,
-            spokenName: (block.restSpokenName ?? "").trim() || block.restName,
-            voiceText: `${(block.restSpokenName ?? "").trim() || block.restName}. ${block.restVoiceText ?? ""}`.trim(),
-            audioUrl: audioUrlOf(block.restAudioKey),
-            duration: block.restSec,
-          });
-        } else {
-          out.push({ kind: "rest", phase, name: "Pauza · vydýchání", duration: block.restSec });
-        }
-      }
+      if (r < rounds - 1) pushRest();
     }
 
     // Číslování kol v rámci bloku.

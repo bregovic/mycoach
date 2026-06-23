@@ -271,6 +271,26 @@ export function Trainer({
     activeSegRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
   }, [index]);
 
+  // Drž obrazovku rozsvícenou během tréninku (mobil) – Wake Lock API.
+  useEffect(() => {
+    if (!running || typeof navigator === "undefined") return;
+    const nav = navigator as Navigator & { wakeLock?: { request: (t: "screen") => Promise<{ release: () => Promise<void> }> } };
+    if (!nav.wakeLock) return;
+    let lock: { release: () => Promise<void> } | null = null;
+    let active = true;
+    const acquire = () => {
+      nav.wakeLock!.request("screen").then((l) => { if (active) lock = l; else l.release().catch(() => {}); }).catch(() => {});
+    };
+    acquire();
+    const onVis = () => { if (document.visibilityState === "visible") acquire(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      active = false;
+      document.removeEventListener("visibilitychange", onVis);
+      lock?.release().catch(() => {});
+    };
+  }, [running]);
+
   const start = () => {
     const segs = preset
       ? preset.segments

@@ -216,15 +216,11 @@ export function annotateSegments(out: Segment[]): void {
     const next = out[i + 1];
     out[i].nextName = next ? next.name : undefined;
     if (out[i].kind === "rest") {
-      // najít nejbližší další work
+      // najít nejbližší další work (jen pro vizuální „Následuje")
       const nw = out.slice(i + 1).find((s) => s.kind === "work");
       if (nw) out[i].nextName = nw.name;
-      // aktivní pauza (kondiční cvik) má vlastní pokyn → nepřepisovat
-      if (!out[i].voiceText) {
-        out[i].voiceText = nw
-          ? `Pauza. Další kolo: ${nw.spokenName}. ${nw.voiceText ?? ""} ${coopHint(nw.coop ?? "najednou")}`.trim()
-          : "Pauza. Poslední úsek se blíží.";
-      }
+      // Pokyn dalšího cviku se NEČTE v pauze – zazní (MP3/hlas) až na startu
+      // toho cviku. Pasivní pauza tak nečte nic; aktivní (kondiční) má vlastní pokyn.
     }
   }
 }
