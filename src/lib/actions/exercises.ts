@@ -187,22 +187,23 @@ async function canEditExercise(userId: string, id: string): Promise<{ audioKey: 
   return { audioKey: ex.audioKey };
 }
 
-/** Nahraje MP3 instrukci ke cviku (vlastník/admin/nesoukromý). FormData: exerciseId + file. */
-export async function uploadExerciseAudio(formData: FormData): Promise<void> {
+/** Nahraje MP3 instrukci ke cviku (vlastník/admin/nesoukromý). FormData: exerciseId + file. Vrací nový klíč. */
+export async function uploadExerciseAudio(formData: FormData): Promise<string | null> {
   const userId = await requireUser();
   const id = String(formData.get("exerciseId") ?? "");
   const file = formData.get("file");
-  if (!(file instanceof File) || !id) return;
+  if (!(file instanceof File) || !id) return null;
   const ex = await canEditExercise(userId, id);
-  if (!ex) return;
+  if (!ex) return null;
   const okType = file.type === "audio/mpeg" || file.name.toLowerCase().endsWith(".mp3");
-  if (!okType || file.size === 0 || file.size > 8 * 1024 * 1024) return; // max 8 MB
+  if (!okType || file.size === 0 || file.size > 8 * 1024 * 1024) return null; // max 8 MB
 
   const buf = Buffer.from(await file.arrayBuffer());
   const key = await storage.save(buf, file.name || "instrukce.mp3", AUDIO_PREFIX);
   if (ex.audioKey) await storage.delete(ex.audioKey);
   await prisma.exercise.update({ where: { id }, data: { audioKey: key } });
   revalidate();
+  return key;
 }
 
 export async function removeExerciseAudio(id: string): Promise<void> {

@@ -96,6 +96,24 @@ export function CatalogManager({
       router.refresh();
     });
 
+  // MP3 řešíme bez router.refresh (jinak by se ztratil fokus/scroll/filtry).
+  const [audioOverride, setAudioOverride] = useState<Record<string, string | null>>({});
+  function uploadAudio(exId: string, file: File) {
+    const fd = new FormData();
+    fd.set("exerciseId", exId);
+    fd.set("file", file);
+    startTransition(async () => {
+      const key = await uploadExerciseAudio(fd);
+      setAudioOverride((o) => ({ ...o, [exId]: key }));
+    });
+  }
+  function removeAudio(exId: string) {
+    startTransition(async () => {
+      await removeExerciseAudio(exId);
+      setAudioOverride((o) => ({ ...o, [exId]: null }));
+    });
+  }
+
   const q = filter.trim().toLowerCase();
   const list = useMemo(
     () =>
@@ -264,7 +282,15 @@ export function CatalogManager({
           <div className="mt-3 space-y-2">
             {list.length === 0 && <p className="rounded-2xl border border-dashed border-zinc-300 bg-white p-6 text-center text-sm text-zinc-400">Žádný cvik.</p>}
             {list.map((ex) => (
-              <ExerciseRow key={ex.id} ex={ex} isAdmin={isAdmin} run={run} />
+              <ExerciseRow
+                key={ex.id}
+                ex={ex}
+                isAdmin={isAdmin}
+                audioKey={ex.id in audioOverride ? audioOverride[ex.id] : ex.audioKey}
+                onUploadAudio={(f) => uploadAudio(ex.id, f)}
+                onRemoveAudio={() => removeAudio(ex.id)}
+                run={run}
+              />
             ))}
           </div>
         </>
@@ -297,15 +323,21 @@ function TabButton({ active, onClick, children }: { active: boolean; onClick: ()
   );
 }
 
-function ExerciseRow({ ex, isAdmin, run }: { ex: CatExercise; isAdmin: boolean; run: (fn: () => Promise<unknown>) => void }) {
-  function onAudio(file: File | null | undefined) {
-    if (!file) return;
-    const fd = new FormData();
-    fd.set("exerciseId", ex.id);
-    fd.set("file", file);
-    run(() => uploadExerciseAudio(fd));
-  }
-
+function ExerciseRow({
+  ex,
+  isAdmin,
+  audioKey,
+  onUploadAudio,
+  onRemoveAudio,
+  run,
+}: {
+  ex: CatExercise;
+  isAdmin: boolean;
+  audioKey: string | null;
+  onUploadAudio: (file: File) => void;
+  onRemoveAudio: () => void;
+  run: (fn: () => Promise<unknown>) => void;
+}) {
   return (
     <form
       onSubmit={(e: FormEvent<HTMLFormElement>) => {
@@ -331,7 +363,7 @@ function ExerciseRow({ ex, isAdmin, run }: { ex: CatExercise; isAdmin: boolean; 
           {ex.mine ? "vlastní" : "veřejné"}
         </span>
         {ex.isPrivate && <span className="rounded bg-amber-50 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-amber-700">soukromé</span>}
-        {ex.audioKey && <span className="rounded bg-green-50 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-green-700">🔊 MP3</span>}
+        {audioKey && <span className="rounded bg-green-50 px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-green-700">🔊 MP3</span>}
       </div>
       <div className="space-y-3">
         <div>
@@ -373,11 +405,11 @@ function ExerciseRow({ ex, isAdmin, run }: { ex: CatExercise; isAdmin: boolean; 
         {/* MP3 instrukce */}
         <div className="rounded-lg bg-zinc-50 p-3">
           <span className={label}>MP3 instrukce (přehraje se místo čtení)</span>
-          {ex.audioKey ? (
+          {audioKey ? (
             <div className="mt-2 flex flex-wrap items-center gap-3">
               {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-              <audio controls src={audioSrc(ex.audioKey)} className="h-9 max-w-full" />
-              <button type="button" onClick={() => run(() => removeExerciseAudio(ex.id))} className="text-xs text-red-600 transition hover:text-red-700">
+              <audio controls src={audioSrc(audioKey)} className="h-9 max-w-full" />
+              <button type="button" onClick={onRemoveAudio} className="text-xs text-red-600 transition hover:text-red-700">
                 Odebrat MP3
               </button>
             </div>
@@ -389,8 +421,9 @@ function ExerciseRow({ ex, isAdmin, run }: { ex: CatExercise; isAdmin: boolean; 
                 accept="audio/mpeg,.mp3"
                 className="hidden"
                 onChange={(e) => {
-                  onAudio(e.target.files?.[0]);
+                  const f = e.target.files?.[0];
                   e.target.value = "";
+                  if (f) onUploadAudio(f);
                 }}
               />
             </label>
