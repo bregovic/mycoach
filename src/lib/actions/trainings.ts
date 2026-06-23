@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { CATEGORY_ORDER } from "@/lib/trainer/types";
+import { dateKey, keyToDate } from "@/lib/calendar";
 
 async function requireUserId(): Promise<string> {
   const session = await auth();
@@ -92,6 +93,33 @@ export async function updateTrainingImage(id: string, dataUrl: string | null): P
 export async function deleteTraining(id: string): Promise<void> {
   const userId = await requireUserId();
   await prisma.training.deleteMany({ where: { id, userId } }); // cascade smaže bloky i položky
+  revalidatePath("/treninky");
+}
+
+/** Přidá veřejný (nebo vlastní) trénink do kalendáře jako úkol na dnešek. */
+export async function addTrainingToCalendar(trainingId: string): Promise<void> {
+  const userId = await requireUserId();
+  const training = await prisma.training.findFirst({
+    where: { id: trainingId, OR: [{ userId }, { isPublic: true }] },
+    select: { id: true, title: true, targetMin: true },
+  });
+  if (!training) return;
+
+  const activity = await prisma.activity.create({
+    data: { userId, name: training.title.slice(0, 60) || "Trénink", color: "#ef4444", sportSlug: "box" },
+    select: { id: true },
+  });
+  await prisma.scheduledTask.create({
+    data: {
+      userId,
+      activityId: activity.id,
+      date: keyToDate(dateKey(new Date())),
+      title: training.title.slice(0, 80),
+      durationMin: training.targetMin ?? null,
+      note: "Z veřejných tréninků",
+    },
+  });
+  revalidatePath("/kalendar");
   revalidatePath("/treninky");
 }
 

@@ -28,7 +28,7 @@ export default async function PresetTrainingPage({
 
   const { id } = await params;
   const training = await prisma.training.findFirst({
-    where: { id, userId: session.user.id },
+    where: { id, OR: [{ userId: session.user.id }, { isPublic: true }] },
     include: {
       blocks: {
         orderBy: { order: "asc" },

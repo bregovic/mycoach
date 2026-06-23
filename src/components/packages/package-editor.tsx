@@ -130,7 +130,7 @@ export function PackageEditor({ pkg }: { pkg: PackageDTO }) {
           </div>
           <label className="flex items-center gap-2 text-sm text-zinc-700">
             <input type="checkbox" name="published" defaultChecked={pkg.published} className="h-4 w-4 rounded border-zinc-300 accent-zinc-900" />
-            Zveřejnit
+            Veřejný
           </label>
         </div>
 
