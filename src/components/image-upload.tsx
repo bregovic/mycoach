@@ -1,26 +1,10 @@
 "use client";
 
 import { useRef, useState, type DragEvent } from "react";
+import { ImageCropper } from "./image-cropper";
 
-// Jednoduchý upload obrázku (logo tréninku): zmenší na max stranu MAX px se
-// zachováním poměru, vrátí JPEG data URL přes onPick. Bez ořezu (na to je avatar).
-const MAX = 512;
-
-async function resize(file: File): Promise<string> {
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(1, MAX / Math.max(bitmap.width, bitmap.height));
-  const w = Math.round(bitmap.width * scale);
-  const h = Math.round(bitmap.height * scale);
-  const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("canvas");
-  ctx.drawImage(bitmap, 0, 0, w, h);
-  bitmap.close?.();
-  return canvas.toDataURL("image/jpeg", 0.85);
-}
-
+// Upload obrázku (logo tréninku) s interaktivním ořezem (zoom/posun) – stejný
+// cropper jako profilovka, jen čtvercový zaoblený výřez.
 export function ImageUpload({
   url,
   onPick,
@@ -35,24 +19,34 @@ export function ImageUpload({
   const inputRef = useRef<HTMLInputElement>(null);
   const [drag, setDrag] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editSrc, setEditSrc] = useState<string | null>(null);
 
-  async function handle(file: File | null | undefined) {
+  function loadFile(file: File | null | undefined) {
     setError(null);
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       setError("Vyber obrázek.");
       return;
     }
-    try {
-      const dataUrl = await resize(file);
-      if (dataUrl.length > 400_000) {
-        setError("Obrázek je moc velký.");
-        return;
-      }
-      onPick(dataUrl);
-    } catch {
-      setError("Obrázek se nepodařilo načíst.");
-    }
+    const reader = new FileReader();
+    reader.onload = () => setEditSrc(String(reader.result));
+    reader.onerror = () => setError("Obrázek se nepodařilo načíst.");
+    reader.readAsDataURL(file);
+  }
+
+  if (editSrc) {
+    return (
+      <ImageCropper
+        src={editSrc}
+        shape="square"
+        pending={disabled}
+        onConfirm={(dataUrl) => {
+          setEditSrc(null);
+          onPick(dataUrl);
+        }}
+        onCancel={() => setEditSrc(null)}
+      />
+    );
   }
 
   return (
@@ -69,7 +63,7 @@ export function ImageUpload({
         onDrop={(e: DragEvent<HTMLButtonElement>) => {
           e.preventDefault();
           setDrag(false);
-          handle(e.dataTransfer.files?.[0]);
+          loadFile(e.dataTransfer.files?.[0]);
         }}
         className={`group relative flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-dashed transition ${
           drag ? "border-zinc-900 bg-zinc-50" : "border-zinc-300 hover:border-zinc-400 hover:bg-zinc-50"
@@ -103,7 +97,7 @@ export function ImageUpload({
         accept="image/*"
         className="hidden"
         onChange={(e) => {
-          handle(e.target.files?.[0]);
+          loadFile(e.target.files?.[0]);
           e.target.value = "";
         }}
       />

@@ -291,6 +291,7 @@ function BlockCard({
 
   function addFromCatalog(ex: ExerciseDTO) {
     setNote(null);
+    setFilter(""); // po potvrzení vyčisti hledání (panel zůstává otevřený pro další)
     startAdd(async () => {
       const res = await addItemFromExercise(block.id, ex.id);
       if (!res.added) setNote(`„${ex.name}" už v bloku je.`);
