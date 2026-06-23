@@ -42,6 +42,9 @@ model User {
   trainings         Training[]
   packagesAuthored  Package[]          @relation("PackageAuthor")
   subscriptions     Subscription[]
+  clubsOwned        Club[]             @relation("ClubOwner")
+  clubMemberships   ClubMember[]
+  attendances       SessionAttendance[]
 }
 
 model Account {
@@ -298,8 +301,9 @@ model Training {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  blocks Block[]
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  blocks       Block[]
+  clubSessions ClubSession[]
 
   @@index([userId])
   @@index([isPublic])
@@ -433,4 +437,108 @@ model SubscriptionElement {
   schedule     ActivitySchedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
 
   @@index([subscriptionId])
+}
+
+// ---------------------------------------------------------------------------
+// Oddíly (kluby/skupiny): rozvrh tréninků, členství + pozvánky, termíny,
+// docházka. Termín bez účastníků = Zrušeno; trenér termín potvrzuje.
+// ---------------------------------------------------------------------------
+
+model Club {
+  id        String   @id @default(cuid())
+  ownerId   String // správce oddílu
+  name      String
+  slug      String   @unique
+  logoUrl   String? // editovatelné logo (data URL)
+  address   String? // adresa tělocvičny
+  sportSlug String?
+  isPublic  Boolean  @default(false) // veřejně dohledatelný
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner    User               @relation("ClubOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  rules    ClubScheduleRule[]
+  members  ClubMember[]
+  invites  ClubInvite[]
+  sessions ClubSession[]
+
+  @@index([ownerId])
+  @@index([isPublic])
+}
+
+model ClubScheduleRule {
+  id        String   @id @default(cuid())
+  clubId    String
+  weekdays  Int[] // 0=Ne … 6=So
+  startMin  Int // začátek (minuty od půlnoci)
+  endMin    Int // konec
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  club     Club          @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  sessions ClubSession[]
+
+  @@index([clubId])
+}
+
+model ClubMember {
+  id       String   @id @default(cuid())
+  clubId   String
+  userId   String
+  role     String   @default("member") // owner | trainer | member
+  joinedAt DateTime @default(now())
+
+  club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([clubId, userId])
+  @@index([userId])
+}
+
+model ClubInvite {
+  id          String   @id @default(cuid())
+  clubId      String
+  email       String // pozvánka podle e-mailu
+  status      String   @default("pending") // pending | accepted | declined
+  invitedById String?
+  createdAt   DateTime @default(now())
+
+  club Club @relation(fields: [clubId], references: [id], onDelete: Cascade)
+
+  @@unique([clubId, email])
+  @@index([email])
+}
+
+model ClubSession {
+  id               String   @id @default(cuid())
+  clubId           String
+  ruleId           String? // z jakého rozvrhu vznikl
+  date             DateTime @db.Date
+  startMin         Int
+  endMin           Int
+  trainingId       String? // přidělený trénink na tento termín
+  trainerConfirmed Boolean  @default(false) // potvrzeno trenérem
+  canceled         Boolean  @default(false) // ručně zrušeno správcem
+  createdAt        DateTime @default(now())
+
+  club        Club                @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  rule        ClubScheduleRule?   @relation(fields: [ruleId], references: [id], onDelete: SetNull)
+  training    Training?           @relation(fields: [trainingId], references: [id], onDelete: SetNull)
+  attendances SessionAttendance[]
+
+  @@unique([clubId, date, startMin])
+  @@index([clubId, date])
+}
+
+model SessionAttendance {
+  id        String   @id @default(cuid())
+  sessionId String
+  userId    String
+  createdAt DateTime @default(now())
+
+  session ClubSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, userId])
+  @@index([userId])
 }
