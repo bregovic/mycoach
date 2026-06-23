@@ -54,7 +54,13 @@ export default async function PresetTrainingPage({
   });
 
   const userName = session.user.name ?? session.user.email ?? "sportovče";
-  const cues = await getUserCues(session.user.id);
+  // Cue: vlastní mají přednost; u cizího (veřejného) tréninku se chybějící typy
+  // doplní cue autora – cue tedy „patří" k jeho veřejným tréninkům.
+  const myCues = await getUserCues(session.user.id);
+  const cues =
+    training.userId === session.user.id
+      ? myCues
+      : { ...(await getUserCues(training.userId)), ...myCues };
 
   return (
     <Trainer
