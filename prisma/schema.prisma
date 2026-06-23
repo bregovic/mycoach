@@ -131,13 +131,18 @@ model Exercise {
   sportId    String
   name       String
   spokenName String? // český mluvený název (syntéza řeči)
+  voiceText  String? // detailní pokyn (čte se v přehrávači)
   category   String? // warmup | combinations | bag_work | sparring | conditioning…
+  coop       String? // najednou|stridave|v_pulce|cele_kolo
+  defaultSec Int? // navržená délka úseku v sekundách
   data       Json? // volná struktura (kompatibilní s legacy drills.json)
   createdAt  DateTime @default(now())
 
-  sport Sport @relation(fields: [sportId], references: [id], onDelete: Cascade)
+  sport      Sport       @relation(fields: [sportId], references: [id], onDelete: Cascade)
+  blockItems BlockItem[]
 
   @@index([sportId])
+  @@index([sportId, category])
 }
 
 model Plan {
@@ -281,9 +286,14 @@ model ScheduledTask {
 model Training {
   id          String   @id @default(cuid())
   userId      String // autor (zatím vlastní tréninky; výhledově sdílení s klientem)
-  sportSlug   String? // box | … (volné napojení na Sport, prozatím string)
+  number      Int      @default(0) // pořadové číslo tréninku autora (#N)
+  sportSlug   String? // číselník Sport.slug (box | …)
   title       String
   description String?
+  difficulty  String? // zacatecnik | mirne_pokrocily | pokrocily | expert
+  imageUrl    String? // logo/obrázek tréninku (data URL)
+  targetMin   Int? // cílová délka v minutách (orientační)
+  isPublic    Boolean  @default(false) // veřejný → ostatní si ho najdou a přidají
   prepareSec  Int      @default(10) // délka úvodní přípravy
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -292,6 +302,7 @@ model Training {
   blocks Block[]
 
   @@index([userId])
+  @@index([isPublic])
 }
 
 model Block {
@@ -319,10 +330,13 @@ model BlockItem {
   voiceText   String? // detailní pokyn čtený na začátku úseku
   coop        String? // najednou|stridave|v_pulce|cele_kolo
   durationSec Int     @default(180)
+  exerciseId  String? // provenience z číselníku Exercise (lookup dle sportu)
 
-  block Block @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  block    Block     @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  exercise Exercise? @relation(fields: [exerciseId], references: [id], onDelete: SetNull)
 
   @@index([blockId])
+  @@index([exerciseId])
 }
 
 // ---------------------------------------------------------------------------
