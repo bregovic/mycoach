@@ -23,6 +23,20 @@ const STATE: Record<Segment["kind"], { ring: string; bar: string; text: string; 
   finish: { ring: "ring-amber-300", bar: "bg-amber-500", text: "text-amber-600", tag: "bg-amber-50 text-amber-700" },
 };
 
+// Jak se cvik dělá (coop) – řekne se po instrukci. „najednou" = individuální → nic.
+function coopHint(sg: Segment): string {
+  if (sg.kind !== "work") return "";
+  if (sg.coop === "v_pulce") return "V půlce kola se na znamení vyměníte.";
+  if (sg.coop === "stridave") return "Střídejte se.";
+  if (sg.coop === "cele_kolo") return "Celé kolo jeden, pak se vyměníte.";
+  return "";
+}
+
+function findNextWork(segs: Segment[], from: number): Segment | null {
+  for (let j = from + 1; j < segs.length; j++) if (segs[j].kind === "work") return segs[j];
+  return null;
+}
+
 /** Předpřipravený (autorovaný) trénink k přehrání místo procedurálního generování. */
 export interface TrainerPreset {
   title: string;
@@ -102,11 +116,15 @@ export function Trainer({
   const cuesRef = useRef<Record<string, string[]>>(cues ?? {});
   cuesRef.current = cues ?? {};
 
-  // Lead-in: u pracovního úseku se nejdřív přečte instrukce, pak „start" a teprve
-  // pak běží odpočet (aby se nepřekrývaly).
-  const [leadIn, setLeadIn] = useState(false);
-  const leadInRef = useRef(false);
-  const leadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Předohlášení: instrukce dalšího cviku se přehraje během pauzy, načasovaná
+  // tak, aby skončila zhruba se startem cviku (plynulé navázání).
+  const preRef = useRef<{ work: Segment | null; leadSec: number; announced: boolean }>({
+    work: null,
+    leadSec: 0,
+    announced: false,
+  });
+  const preAudioRef = useRef<HTMLAudioElement | null>(null);
+  const workPreannouncedRef = useRef(false);
 
   // Přehraje náhodný uživatelský zvukový pokyn daného typu. Vrací, zda něco hrálo.
   const playCue = useCallback((type: string): boolean => {
@@ -140,24 +158,28 @@ export function Trainer({
   // po dočtení (nebo hned, je-li ztišeno/prázdné).
   const readInstruction = useCallback(
     (sg: Segment, onDone?: () => void) => {
+      const hint = coopHint(sg); // jak se to dělá (střídat / vyměnit); individuální = ""
       if (sg.audioUrl) {
         if (speech.muted) {
           onDone?.();
           return;
         }
+        // po MP3 instrukci řekni coop pokyn (pokud je relevantní)
+        const after = () => (hint ? speech.speak(hint, onDone) : onDone?.());
         try {
           if (!instrRef.current) instrRef.current = new Audio();
           instrRef.current.pause();
-          instrRef.current.onended = onDone ? () => onDone() : null;
-          instrRef.current.onerror = onDone ? () => onDone() : null;
+          instrRef.current.onended = after;
+          instrRef.current.onerror = after;
           instrRef.current.src = sg.audioUrl;
-          void instrRef.current.play().catch(() => onDone?.());
+          void instrRef.current.play().catch(after);
         } catch {
-          onDone?.();
+          after();
         }
         return;
       }
-      const text = sg.kind === "work" ? `${sg.spokenName}. ${sg.voiceText ?? ""}` : sg.voiceText ?? "";
+      const base = sg.kind === "work" ? `${sg.spokenName}. ${sg.voiceText ?? ""}` : sg.voiceText ?? "";
+      const text = hint ? `${base}. ${hint}` : base;
       speech.speak(text, onDone);
     },
     [speech],
@@ -167,9 +189,14 @@ export function Trainer({
   const goTo = useCallback(
     (i: number) => {
       const segs = segsRef.current;
-      if (leadTimerRef.current) {
-        clearTimeout(leadTimerRef.current);
-        leadTimerRef.current = null;
+      // ukliď naplánované předohlášení
+      preRef.current = { work: null, leadSec: 0, announced: false };
+      if (preAudioRef.current) {
+        try {
+          preAudioRef.current.pause();
+        } catch {
+          /* ignore */
+        }
       }
       if (i < 0 || i >= segs.length) {
         // Konec přehrávání. Pokud trénink doběhl přirozeně (ne ručním ukončením),
@@ -186,8 +213,6 @@ export function Trainer({
             }).catch(() => {});
           }
         }
-        leadInRef.current = false;
-        setLeadIn(false);
         setRunning(false);
         setIndex(-1);
         setSegments([]);
@@ -197,30 +222,39 @@ export function Trainer({
       const sg = segs[i];
       setIndex(i);
       setTimeLeft(sg.duration);
+      playStartCue(sg);
+
       if (sg.kind === "work") {
-        // Nejdřív přečti instrukci, pak „start" + spusť odpočet.
-        leadInRef.current = true;
-        setLeadIn(true);
-        let used = false;
-        const done = () => {
-          if (used) return;
-          used = true;
-          if (leadTimerRef.current) {
-            clearTimeout(leadTimerRef.current);
-            leadTimerRef.current = null;
+        // Instrukci buď zazněla už v pauze (předohlášení), nebo ji přečti teď.
+        if (!workPreannouncedRef.current) readInstruction(sg);
+        workPreannouncedRef.current = false;
+        return;
+      }
+
+      // pauza / příprava / konec – přehraj vlastní pokyn (aktivní pauza = kondiční cvik)
+      readInstruction(sg);
+
+      // Naplánuj ohlášení dalšího cviku během pauzy (ať navazuje na jeho start).
+      if (sg.kind === "rest" || sg.kind === "prepare") {
+        const nw = findNextWork(segs, i);
+        if (nw) {
+          if (nw.audioUrl) {
+            // přednačti, ať odhadneme délku MP3 a spustíme ji včas
+            preRef.current = { work: nw, leadSec: Math.min(sg.duration - 1, 9), announced: false };
+            const a = new Audio();
+            a.preload = "metadata";
+            a.onloadedmetadata = () => {
+              const d = Number.isFinite(a.duration) ? a.duration : 8;
+              preRef.current.leadSec = Math.min(sg.duration - 1, Math.ceil(d) + 2);
+            };
+            a.src = nw.audioUrl;
+            preAudioRef.current = a;
+          } else {
+            const words = `${nw.spokenName} ${nw.voiceText ?? ""}`.trim().split(/\s+/).filter(Boolean).length;
+            const lead = Math.min(sg.duration - 1, Math.max(3, Math.round(words * 0.5) + 1));
+            preRef.current = { work: nw, leadSec: lead, announced: false };
           }
-          if (idxRef.current !== i) return; // mezitím skip/ukončení
-          playStartCue(sg);
-          leadInRef.current = false;
-          setLeadIn(false);
-        };
-        readInstruction(sg, done);
-        leadTimerRef.current = setTimeout(done, 12000); // pojistka
-      } else {
-        leadInRef.current = false;
-        setLeadIn(false);
-        playStartCue(sg);
-        readInstruction(sg);
+        }
       }
     },
     [playStartCue, readInstruction, speech],
@@ -232,13 +266,23 @@ export function Trainer({
     const segs = segsRef.current;
     const sg = segs[i];
     if (!sg) return;
-    if (leadInRef.current) return; // čekáme na dočtení instrukce
     const next = tlRef.current - 1;
     if (next <= 0) {
       goTo(i + 1);
       return;
     }
     setTimeLeft(next);
+
+    // Předohlášení dalšího cviku během pauzy (načasované podle délky instrukce).
+    if (sg.kind === "rest" || sg.kind === "prepare") {
+      const pre = preRef.current;
+      if (pre.work && !pre.announced && pre.leadSec > 0 && next <= pre.leadSec) {
+        pre.announced = true;
+        workPreannouncedRef.current = true;
+        readInstruction(pre.work);
+      }
+    }
+
     if (next <= 5) audio.playTick();
     if (next === 5) playCue("countdown");
     if (sg.kind === "work" && sg.duration > 20 && next === Math.floor(sg.duration / 2)) {
@@ -317,18 +361,15 @@ export function Trainer({
   };
 
   const reset = () => {
-    if (leadTimerRef.current) {
-      clearTimeout(leadTimerRef.current);
-      leadTimerRef.current = null;
-    }
-    leadInRef.current = false;
-    setLeadIn(false);
+    preRef.current = { work: null, leadSec: 0, announced: false };
+    workPreannouncedRef.current = false;
     setRunning(false);
     setIndex(-1);
     setSegments([]);
     speech.cancel();
     instrRef.current?.pause();
     cueRef.current?.pause();
+    preAudioRef.current?.pause();
   };
 
   const anyPhase = CATEGORY_ORDER.some((k) => phases[k]);
@@ -511,7 +552,6 @@ export function Trainer({
             {seg && phaseLabel(seg)}
             {seg?.kind === "work" && seg.roundNum ? ` · kolo ${seg.roundNum}/${seg.totalRoundsInPhase}` : ""}
           </div>
-          {leadIn && <div className="mt-1 text-xs font-medium text-zinc-400">📢 Instrukce… odpočet začne po ní</div>}
           <div className={`mt-2 font-bold tabular-nums tracking-tight ${st.text} text-[clamp(3.75rem,17vw,7.5rem)] leading-none`}>
             {formatTime(timeLeft)}
           </div>

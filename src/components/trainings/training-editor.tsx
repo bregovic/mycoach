@@ -82,10 +82,10 @@ export interface ExerciseDTO {
 }
 
 const COOP_LABELS: Record<string, string> = {
-  najednou: "Najednou",
-  stridave: "Střídavě",
-  v_pulce: "Výměna v půlce",
-  cele_kolo: "Celé kolo",
+  najednou: "Individuální (bez pokynu)",
+  stridave: "Ve dvojici – střídavě",
+  v_pulce: "Ve dvojici – výměna v půlce",
+  cele_kolo: "Ve dvojici – celé kolo",
 };
 
 const input =
