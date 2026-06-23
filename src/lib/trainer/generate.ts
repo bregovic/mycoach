@@ -202,7 +202,16 @@ export function generateWorkout(db: DrillDatabase, opts: GenerateOptions): Segme
     duration: 5,
   });
 
-  // Doplnit „následuje" + voiceText pauz.
+  annotateSegments(out);
+  return out;
+}
+
+/**
+ * Doplní do segmentů „následuje" (`nextName`) a vygeneruje hlasový text pauz
+ * (ohlášení dalšího kola). Sdílené generátorem i kompilátorem autorovaných
+ * tréninků – mutuje pole na místě.
+ */
+export function annotateSegments(out: Segment[]): void {
   for (let i = 0; i < out.length; i++) {
     const next = out[i + 1];
     out[i].nextName = next ? next.name : undefined;
@@ -210,7 +219,7 @@ export function generateWorkout(db: DrillDatabase, opts: GenerateOptions): Segme
       // najít nejbližší další work
       const nw = out.slice(i + 1).find((s) => s.kind === "work");
       if (nw) {
-        out[i].voiceText = `Pauza. Další kolo: ${nw.spokenName}. ${nw.voiceText} ${coopHint(
+        out[i].voiceText = `Pauza. Další kolo: ${nw.spokenName}. ${nw.voiceText ?? ""} ${coopHint(
           nw.coop ?? "najednou",
         )}`.trim();
         out[i].nextName = nw.name;
@@ -219,8 +228,6 @@ export function generateWorkout(db: DrillDatabase, opts: GenerateOptions): Segme
       }
     }
   }
-
-  return out;
 }
 
 export function workoutTotals(segments: Segment[]) {

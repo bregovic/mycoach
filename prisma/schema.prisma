@@ -39,6 +39,7 @@ model User {
   activities        Activity[]
   activitySchedules ActivitySchedule[]
   scheduledTasks    ScheduledTask[]
+  trainings         Training[]
 }
 
 model Account {
@@ -264,4 +265,57 @@ model ScheduledTask {
   @@unique([scheduleId, date]) // jeden rozvrh = max 1 úkol na den (ruční mají scheduleId NULL → bez omezení)
   @@index([userId, date])
   @@index([activityId])
+}
+
+// ---------------------------------------------------------------------------
+// Strukturované (autorované) tréninky: Training → Block → BlockItem
+// Trenér/uživatel skládá trénink ručně; kompiluje se na Segment[] pro přehrávač
+// /trening (viz src/lib/trainer/compile.ts). Doplněk k procedurálnímu generátoru.
+// ---------------------------------------------------------------------------
+
+model Training {
+  id          String   @id @default(cuid())
+  userId      String // autor (zatím vlastní tréninky; výhledově sdílení s klientem)
+  sportSlug   String? // box | … (volné napojení na Sport, prozatím string)
+  title       String
+  description String?
+  prepareSec  Int      @default(10) // délka úvodní přípravy
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  blocks Block[]
+
+  @@index([userId])
+}
+
+model Block {
+  id         String   @id @default(cuid())
+  trainingId String
+  order      Int      @default(0)
+  title      String
+  category   String? // warmup|combinations|bag_work|sparring|conditioning – barva/štítek
+  rounds     Int      @default(1) // kolikrát blok zopakovat
+  restSec    Int      @default(60) // pauza mezi koly bloku (0 = bez pauzy)
+  createdAt  DateTime @default(now())
+
+  training Training    @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  items    BlockItem[]
+
+  @@index([trainingId])
+}
+
+model BlockItem {
+  id          String  @id @default(cuid())
+  blockId     String
+  order       Int     @default(0)
+  name        String
+  spokenName  String? // český mluvený název pro syntézu řeči
+  voiceText   String? // detailní pokyn čtený na začátku úseku
+  coop        String? // najednou|stridave|v_pulce|cele_kolo
+  durationSec Int     @default(180)
+
+  block Block @relation(fields: [blockId], references: [id], onDelete: Cascade)
+
+  @@index([blockId])
 }
