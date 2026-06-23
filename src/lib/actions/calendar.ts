@@ -154,6 +154,22 @@ export async function setTaskStatus(id: string, status: string): Promise<void> {
   revalidatePath("/historie");
 }
 
+/** Odložit úkol na jiný den – přesune ho v kalendáři a vrátí na „open". */
+export async function postponeTask(id: string, dateKey: string): Promise<void> {
+  const userId = await requireUserId();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return;
+  const task = await prisma.scheduledTask.findFirst({ where: { id, userId } });
+  if (!task) return;
+  if (task.workoutLogId) await prisma.workoutLog.deleteMany({ where: { id: task.workoutLogId, userId } });
+  await prisma.scheduledTask.update({
+    where: { id: task.id },
+    data: { date: keyToDate(dateKey), done: false, status: "open", completedAt: null, workoutLogId: null },
+  });
+  revalidatePath("/kalendar");
+  revalidatePath("/dashboard");
+  revalidatePath("/historie");
+}
+
 // --- Opakovaný rozvrh -----------------------------------------------------
 
 export async function createSchedule(input: {

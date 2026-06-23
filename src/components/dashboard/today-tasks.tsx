@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
-import { setTaskStatus } from "@/lib/actions/calendar";
+import { useState, useTransition } from "react";
+import { setTaskStatus, postponeTask } from "@/lib/actions/calendar";
 
 export interface TodayTask {
   id: string;
@@ -22,6 +22,7 @@ const STATE: Record<string, { label: string; cls: string }> = {
 export function TodayTasks({ tasks }: { tasks: TodayTask[] }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const [postponeFor, setPostponeFor] = useState<string | null>(null);
 
   const set = (id: string, current: string, target: string) => {
     const next = current === target ? "open" : target; // klik na aktivní stav = zpět na open
@@ -30,6 +31,22 @@ export function TodayTasks({ tasks }: { tasks: TodayTask[] }) {
       router.refresh();
     });
   };
+
+  const postpone = (id: string, dateKey: string) => {
+    if (!dateKey) return;
+    startTransition(async () => {
+      await postponeTask(id, dateKey);
+      setPostponeFor(null);
+      router.refresh();
+    });
+  };
+
+  // zítřek jako výchozí datum pro odložení
+  const tomorrow = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().slice(0, 10);
+  })();
 
   return (
     <div className={`space-y-2 ${pending ? "opacity-60" : ""}`}>
@@ -53,8 +70,8 @@ export function TodayTasks({ tasks }: { tasks: TodayTask[] }) {
               </button>
               <button
                 type="button"
-                onClick={() => set(t.id, t.status, "postponed")}
-                className={`flex-1 rounded-lg px-3 py-1.5 text-xs font-medium transition sm:flex-none ${t.status === "postponed" ? "bg-amber-500 text-white hover:bg-amber-600" : "border border-amber-300 text-amber-700 hover:bg-amber-50"}`}
+                onClick={() => setPostponeFor((p) => (p === t.id ? null : t.id))}
+                className={`flex-1 rounded-lg px-3 py-1.5 text-xs font-medium transition sm:flex-none ${postponeFor === t.id ? "bg-amber-500 text-white hover:bg-amber-600" : "border border-amber-300 text-amber-700 hover:bg-amber-50"}`}
               >
                 ⏭ Odložit
               </button>
@@ -66,6 +83,19 @@ export function TodayTasks({ tasks }: { tasks: TodayTask[] }) {
                 ✕ Zrušit
               </button>
             </div>
+
+            {postponeFor === t.id && (
+              <div className="flex w-full items-center gap-2 border-t border-zinc-100 pt-2">
+                <span className="text-xs text-zinc-500">Přesunout na:</span>
+                <input
+                  type="date"
+                  defaultValue={tomorrow}
+                  min={tomorrow}
+                  onChange={(e) => postpone(t.id, e.target.value)}
+                  className="rounded-lg border border-zinc-300 px-2 py-1 text-sm text-zinc-900 outline-none focus:border-zinc-500"
+                />
+              </div>
+            )}
           </div>
         );
       })}
