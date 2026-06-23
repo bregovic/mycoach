@@ -131,8 +131,7 @@ export function ImageCropper({
 
       <div className={stack ? "w-full" : "w-full max-w-xs"} style={stack ? { maxWidth: V } : undefined}>
         <p className="text-sm font-medium text-zinc-700">Uprav výřez</p>
-        <p className="mt-0.5 text-xs text-zinc-400">Táhni pro posun, posuvníkem přibliž.</p>
-        <div className="mt-3 flex items-center gap-2">
+        <div className="mt-2 flex items-center gap-2">
           <span className="text-xs text-zinc-400">−</span>
           <input
             type="range"

@@ -32,7 +32,7 @@ export interface TrainerPreset {
 
 function Shell({ right, children }: { right: ReactNode; children: ReactNode }) {
   return (
-    <main className="min-h-dvh bg-gradient-to-b from-zinc-50 to-zinc-100/40">
+    <main className="min-h-dvh overflow-x-hidden bg-gradient-to-b from-zinc-50 to-zinc-100/40">
       <header className="sticky top-0 z-20 border-b border-zinc-200/80 bg-white/70 backdrop-blur-md">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3 sm:px-6">
           <Link href="/dashboard" className="transition hover:opacity-80">
@@ -518,8 +518,8 @@ export function Trainer({
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-100">
             <div className={`h-full ${st.bar} transition-[width] duration-1000 ease-linear`} style={{ width: `${pct}%` }} />
           </div>
-          <div className="mt-3 text-lg font-semibold text-zinc-900 sm:mt-4 sm:text-xl">{seg?.name}</div>
-          {seg?.voiceText && seg.kind === "work" && <div className="mt-1 text-sm text-zinc-500">{seg.voiceText}</div>}
+          <div className="mt-3 break-words text-lg font-semibold text-zinc-900 sm:mt-4 sm:text-xl">{seg?.name}</div>
+          {seg?.voiceText && seg.kind === "work" && <div className="mt-1 break-words text-sm text-zinc-500">{seg.voiceText}</div>}
           {seg?.roles && (
             <div className="mt-3 inline-block rounded-lg border border-dashed border-amber-400 px-3 py-1.5 text-sm text-amber-700">
               {seg.roles}

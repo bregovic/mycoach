@@ -33,10 +33,7 @@ export function SoundSettings({ byType }: { byType: Record<string, SoundItem[]> 
 
   return (
     <div className={`space-y-3 ${pending ? "opacity-60" : ""}`}>
-      <p className="text-sm text-zinc-500">
-        Nahraj si vlastní hlášky pro opakující se momenty. Když k jednomu typu nahraješ víc nahrávek,
-        v tréninku se budou <strong>náhodně střídat</strong>. Bez nahrávky zůstane výchozí gong/hlas.
-      </p>
+      <p className="text-xs text-zinc-400">Víc nahrávek u jednoho typu = v tréninku se náhodně střídají.</p>
 
       {SOUND_CUES.map((cue) => {
         const items = byType[cue.key] ?? [];

@@ -86,9 +86,7 @@ export function AvatarUploader({ src, name }: { src: string | null; name: string
       </button>
 
       <div className="min-w-0">
-        <p className="text-sm text-zinc-600">Přetáhni fotku na kolečko, nebo klikni a vyber soubor.</p>
-        <p className="mt-0.5 text-xs text-zinc-400">JPG, PNG nebo WebP — pak si upravíš výřez.</p>
-        <div className="mt-2 flex items-center gap-3">
+        <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
