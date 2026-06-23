@@ -10,6 +10,7 @@ import { AppHeader } from "@/components/app-header";
 import { AvatarUploader } from "@/components/avatar-uploader";
 import { SoundSettings } from "@/components/sound-settings";
 import { AccountSettings } from "@/components/account-settings";
+import { InstallPwa } from "@/components/install-pwa";
 
 export const metadata = { title: "Profil" };
 
@@ -164,6 +165,12 @@ export default async function ProfilePage() {
         <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6">
           <h2 className="mb-4 text-base font-semibold text-zinc-900">Údaje profilu</h2>
           <ProfileForm values={values} />
+        </div>
+
+        {/* Aplikace do mobilu */}
+        <div className="mt-6 rounded-2xl border border-zinc-200 bg-white p-6">
+          <h2 className="mb-3 text-base font-semibold text-zinc-900">Aplikace v mobilu</h2>
+          <InstallPwa />
         </div>
 
         {/* Účet */}

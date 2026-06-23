@@ -15,6 +15,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: { default: "MyCoach", template: "%s · MyCoach" },
   description: "Osobní trénink, váha a kondice na jednom místě.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "MyCoach", statusBarStyle: "default" },
+  icons: { apple: "/apple-icon.png" },
+};
+
+export const viewport = {
+  themeColor: "#18181b",
 };
 
 export default function RootLayout({
