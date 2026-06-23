@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { hhmmToMin } from "@/lib/clubs";
+import { hhmmToMin, minToHHMM } from "@/lib/clubs";
 
 async function requireUser(): Promise<{ id: string; email: string }> {
   const session = await auth();
@@ -270,14 +270,55 @@ export async function setAttendance(sessionId: string, status: string): Promise<
     where: { sessionId_userId: { sessionId, userId } },
     select: { id: true, status: true },
   });
+  let nowGoing = false;
   if (existing && existing.status === value) {
     await prisma.sessionAttendance.delete({ where: { id: existing.id } });
   } else if (existing) {
     await prisma.sessionAttendance.update({ where: { id: existing.id }, data: { status: value } });
+    nowGoing = value === "going";
   } else {
     await prisma.sessionAttendance.create({ data: { sessionId, userId, status: value } });
+    nowGoing = value === "going";
   }
+  await syncClubTask(userId, sessionId, nowGoing);
   revalidate(clubId);
+  revalidatePath("/kalendar");
+}
+
+const CLUB_COLOR = "#6366f1";
+
+/** Synchronizuje kalendářní úkol s přihlášením na termín („Přijdu"). */
+async function syncClubTask(userId: string, sessionId: string, going: boolean): Promise<void> {
+  if (!going) {
+    await prisma.scheduledTask.deleteMany({ where: { userId, clubSessionId: sessionId } });
+    return;
+  }
+  const s = await prisma.clubSession.findUnique({
+    where: { id: sessionId },
+    select: { clubId: true, date: true, startMin: true, endMin: true, club: { select: { name: true } } },
+  });
+  if (!s) return;
+  const slug = `club:${s.clubId}`;
+  let act = await prisma.activity.findFirst({ where: { userId, sportSlug: slug }, select: { id: true } });
+  if (!act) {
+    act = await prisma.activity.create({
+      data: { userId, name: s.club.name.slice(0, 60) || "Oddíl", color: CLUB_COLOR, sportSlug: slug },
+      select: { id: true },
+    });
+  }
+  await prisma.scheduledTask.upsert({
+    where: { userId_clubSessionId: { userId, clubSessionId: sessionId } },
+    create: {
+      userId,
+      activityId: act.id,
+      clubSessionId: sessionId,
+      date: s.date,
+      title: s.club.name,
+      durationMin: Math.max(0, s.endMin - s.startMin),
+      note: `Oddíl · ${minToHHMM(s.startMin)}–${minToHHMM(s.endMin)}`,
+    },
+    update: { date: s.date, activityId: act.id },
+  });
 }
 
 export async function confirmSession(sessionId: string, confirmed: boolean): Promise<void> {

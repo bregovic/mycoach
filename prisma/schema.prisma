@@ -275,14 +275,17 @@ model ScheduledTask {
   done         Boolean   @default(false)
   completedAt  DateTime?
   workoutLogId String?   @unique // záznam v historii vytvořený po splnění
+  clubSessionId String?  // úkol vznikl z přihlášení na oddílový termín („Přijdu")
   createdAt    DateTime  @default(now())
 
-  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  activity   Activity          @relation(fields: [activityId], references: [id], onDelete: Cascade)
-  schedule   ActivitySchedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
-  workoutLog WorkoutLog?       @relation(fields: [workoutLogId], references: [id], onDelete: SetNull)
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activity    Activity          @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  schedule    ActivitySchedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+  workoutLog  WorkoutLog?       @relation(fields: [workoutLogId], references: [id], onDelete: SetNull)
+  clubSession ClubSession?      @relation(fields: [clubSessionId], references: [id], onDelete: Cascade)
 
   @@unique([scheduleId, date]) // jeden rozvrh = max 1 úkol na den (ruční mají scheduleId NULL → bez omezení)
+  @@unique([userId, clubSessionId]) // max 1 kalendářní úkol na uživatele a termín
   @@index([userId, date])
   @@index([activityId])
 }
@@ -530,10 +533,11 @@ model ClubSession {
   canceled         Boolean  @default(false) // ručně zrušeno správcem
   createdAt        DateTime @default(now())
 
-  club        Club                @relation(fields: [clubId], references: [id], onDelete: Cascade)
-  rule        ClubScheduleRule?   @relation(fields: [ruleId], references: [id], onDelete: SetNull)
-  training    Training?           @relation(fields: [trainingId], references: [id], onDelete: SetNull)
-  attendances SessionAttendance[]
+  club          Club                @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  rule          ClubScheduleRule?   @relation(fields: [ruleId], references: [id], onDelete: SetNull)
+  training      Training?           @relation(fields: [trainingId], references: [id], onDelete: SetNull)
+  attendances   SessionAttendance[]
+  calendarTasks ScheduledTask[]
 
   @@unique([clubId, date, startMin])
   @@index([clubId, date])
