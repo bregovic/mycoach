@@ -312,8 +312,8 @@ function BlockCard({
   const inBlock = new Set(block.items.map((it) => it.exerciseId).filter(Boolean));
   const q = filter.trim().toLowerCase();
   const filtered = sportExercises
-    // bez hledání předfiltruj na kategorii bloku (je-li), při hledání prohledej vše
-    .filter((e) => (q || !block.category ? true : e.category === block.category))
+    // ukazuj jen cviky se stejnou kategorií jako blok (má-li blok kategorii)
+    .filter((e) => (block.category ? e.category === block.category : true))
     .filter((e) => e.name.toLowerCase().includes(q))
     .slice(0, 40);
 
@@ -493,11 +493,14 @@ function ItemRow({
   isLast: boolean;
   run: (fn: () => Promise<unknown>) => void;
 }) {
+  const [open, setOpen] = useState(false);
+
   return (
     <form
       onSubmit={(e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const fd = new FormData(e.currentTarget);
+        setOpen(false);
         run(() =>
           updateItem({
             id: item.id,
@@ -509,37 +512,62 @@ function ItemRow({
           }),
         );
       }}
-      className="rounded-lg border border-zinc-200 bg-zinc-50/60 p-3"
+      className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 sm:p-4"
     >
-      <div className="flex items-start gap-2">
-        <div className="flex flex-col gap-0.5 pt-1.5 text-xs">
+      <div className="flex items-start gap-3">
+        <div className="flex flex-col gap-0.5 pt-1 text-xs">
           <button type="button" disabled={isFirst} onClick={() => run(() => moveItem(item.id, "up"))} className="text-zinc-400 transition enabled:hover:text-zinc-700 disabled:opacity-30" aria-label="Nahoru">▲</button>
           <button type="button" disabled={isLast} onClick={() => run(() => moveItem(item.id, "down"))} className="text-zinc-400 transition enabled:hover:text-zinc-700 disabled:opacity-30" aria-label="Dolů">▼</button>
         </div>
-        <div className="grid flex-1 gap-2 sm:grid-cols-[1fr_110px_130px]">
-          <input name="name" defaultValue={item.name} placeholder="Název cviku" className={input} />
-          <input name="durationSec" type="number" min={5} max={1800} defaultValue={item.durationSec} className={input} aria-label="Délka (s)" />
-          <select name="coop" defaultValue={item.coop ?? "najednou"} className={input}>
-            {Object.entries(COOP_LABELS).map(([v, l]) => (
-              <option key={v} value={v}>{l}</option>
-            ))}
-          </select>
-          <input name="spokenName" defaultValue={item.spokenName ?? ""} placeholder="Mluvený název (nepovinné)" className={`${input} sm:col-span-1`} />
-          <input name="voiceText" defaultValue={item.voiceText ?? ""} placeholder="Hlasový pokyn (nepovinné)" className={`${input} sm:col-span-2`} />
-        </div>
-      </div>
-      <div className="mt-2 flex items-center justify-between gap-3">
-        <span className="pl-1 text-[10px] font-medium uppercase tracking-wide text-zinc-400">
-          {item.exerciseId ? "z číselníku" : "vlastní"}
-        </span>
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={() => run(() => deleteItem(item.id))} className="text-xs text-red-600 transition hover:text-red-700">
-            Smazat
-          </button>
-          <button type="submit" className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-100">
-            Uložit cvik
-          </button>
-        </div>
+
+        {open ? (
+          <div className="min-w-0 flex-1 space-y-3">
+            <div>
+              <label className={label}>Název cviku</label>
+              <input name="name" defaultValue={item.name} placeholder="Název cviku" className={`${input} mt-1 text-base`} />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className={label}>Délka (s)</label>
+                <input name="durationSec" type="number" min={5} max={1800} defaultValue={item.durationSec} className={`${input} mt-1`} />
+              </div>
+              <div>
+                <label className={label}>Režim</label>
+                <select name="coop" defaultValue={item.coop ?? "najednou"} className={`${input} mt-1`}>
+                  {Object.entries(COOP_LABELS).map(([v, l]) => (
+                    <option key={v} value={v}>{l}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className={label}>Mluvený název</label>
+              <input name="spokenName" defaultValue={item.spokenName ?? ""} placeholder="Český mluvený název (pro hlas)" className={`${input} mt-1`} />
+            </div>
+            <div>
+              <label className={label}>Hlasový pokyn</label>
+              <input name="voiceText" defaultValue={item.voiceText ?? ""} placeholder="Detailní pokyn čtený v přehrávači" className={`${input} mt-1`} />
+            </div>
+            <div className="flex items-center justify-end gap-3">
+              <button type="button" onClick={() => setOpen(false)} className="text-xs text-zinc-500 transition hover:text-zinc-800">Zavřít</button>
+              <button type="submit" className="rounded-lg bg-zinc-900 px-4 py-2 text-xs font-medium text-white transition hover:bg-zinc-800">Uložit cvik</button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex min-w-0 flex-1 items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="truncate text-base font-medium text-zinc-900">{item.name}</p>
+              <p className="mt-0.5 text-xs text-zinc-500">
+                {item.durationSec}s · {COOP_LABELS[item.coop ?? "najednou"] ?? "Najednou"}
+                {item.exerciseId ? " · z číselníku" : ""}
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-3">
+              <button type="button" onClick={() => run(() => deleteItem(item.id))} className="text-xs text-red-600 transition hover:text-red-700">Smazat</button>
+              <button type="button" onClick={() => setOpen(true)} className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-100">Upravit</button>
+            </div>
+          </div>
+        )}
       </div>
     </form>
   );
