@@ -20,6 +20,7 @@ const TILES: Tile[] = [
   { href: "/kalendar", icon: "🗓️", title: "Kalendář", desc: "Plánuj tréninky a úkoly", cta: "Otevřít" },
   { href: "/treninky", icon: "🧱", title: "Moje tréninky", desc: "Skládej vlastní tréninky z bloků", cta: "Otevřít" },
   { href: "/balicky", icon: "📦", title: "Balíčky", desc: "Programy na míru → do kalendáře", cta: "Procházet" },
+  { href: "/oddily", icon: "👥", title: "Oddíly", desc: "Skupiny, rozvrh a termíny tréninků", cta: "Otevřít" },
 ];
 
 export default async function DashboardPage() {
