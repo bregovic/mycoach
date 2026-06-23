@@ -389,6 +389,20 @@ model Subscription {
   @@index([userId])
 }
 
+// Katalog prvků (lookup) – nabídka, ze které si uživatel přidává další prvky
+// do svého odběru. Mají navrženou frekvenci; nepatří k žádné konkrétní šabloně.
+model ElementPreset {
+  id                  String   @id @default(cuid())
+  name                String
+  note                String?
+  color               String   @default("#18181b")
+  defaultIntervalDays Int      @default(28)
+  category            String?
+  createdAt           DateTime @default(now())
+
+  @@index([category])
+}
+
 model SubscriptionElement {
   id             String  @id @default(cuid())
   subscriptionId String

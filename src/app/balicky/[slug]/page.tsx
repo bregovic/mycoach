@@ -7,7 +7,8 @@ import { categoryLabel } from "@/lib/packages";
 import {
   PackageSubscribe,
   type ElementView,
-  type ExistingSelection,
+  type ExistingRow,
+  type PresetView,
 } from "@/components/packages/package-subscribe";
 
 export const metadata = { title: "Balíček" };
@@ -31,10 +32,15 @@ export default async function PackageDetailPage({
   });
   if (!pkg) notFound();
 
-  const subscription = await prisma.subscription.findUnique({
-    where: { userId_packageId: { userId, packageId: pkg.id } },
-    include: { elements: { select: { elementId: true, enabled: true, intervalDays: true } } },
-  });
+  const [subscription, presetRows] = await Promise.all([
+    prisma.subscription.findUnique({
+      where: { userId_packageId: { userId, packageId: pkg.id } },
+      include: {
+        elements: { select: { elementId: true, name: true, color: true, enabled: true, intervalDays: true } },
+      },
+    }),
+    prisma.elementPreset.findMany({ orderBy: { name: "asc" } }),
+  ]);
 
   const elements: ElementView[] = pkg.elements.map((e) => ({
     id: e.id,
@@ -45,13 +51,23 @@ export default async function PackageDetailPage({
     optional: e.optional,
   }));
 
-  const existing: ExistingSelection[] | null = subscription
+  const existing: ExistingRow[] | null = subscription
     ? subscription.elements.map((e) => ({
         elementId: e.elementId,
+        name: e.name,
+        color: e.color,
         enabled: e.enabled,
         intervalDays: e.intervalDays,
       }))
     : null;
+
+  const presets: PresetView[] = presetRows.map((p) => ({
+    id: p.id,
+    name: p.name,
+    note: p.note,
+    color: p.color,
+    defaultIntervalDays: p.defaultIntervalDays,
+  }));
 
   const cat = categoryLabel(pkg.category);
 
@@ -121,7 +137,12 @@ export default async function PackageDetailPage({
           {elements.length === 0 ? (
             <p className="text-sm text-zinc-400">Tento balíček zatím nemá žádné prvky.</p>
           ) : (
-            <PackageSubscribe packageId={pkg.id} elements={elements} existing={existing} />
+            <PackageSubscribe
+              packageId={pkg.id}
+              elements={elements}
+              existing={existing}
+              presets={presets}
+            />
           )}
         </div>
 
