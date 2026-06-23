@@ -64,9 +64,25 @@ export function Trainer({ userName, preset }: { userName: string; preset?: Train
   const logMetaRef = useRef(logMeta);
   logMetaRef.current = logMeta;
 
+  const instrRef = useRef<HTMLAudioElement | null>(null);
+
   const announce = useCallback(
     (sg: Segment) => {
       audio.playBell(sg.kind === "prepare" || sg.kind === "finish");
+      // Nahraná MP3 instrukce má přednost před čtením (TTS).
+      if (sg.audioUrl) {
+        if (!speech.muted) {
+          try {
+            if (!instrRef.current) instrRef.current = new Audio();
+            instrRef.current.pause();
+            instrRef.current.src = sg.audioUrl;
+            void instrRef.current.play().catch(() => {});
+          } catch {
+            /* ignore */
+          }
+        }
+        return;
+      }
       const text =
         sg.kind === "work"
           ? `Kolo ${sg.roundNum}. ${sg.spokenName}. ${sg.voiceText ?? ""}`
@@ -166,6 +182,7 @@ export function Trainer({ userName, preset }: { userName: string; preset?: Train
     if (running) {
       setRunning(false);
       speech.pause();
+      instrRef.current?.pause();
     } else {
       audio.unlock();
       setRunning(true);
@@ -178,6 +195,7 @@ export function Trainer({ userName, preset }: { userName: string; preset?: Train
     setIndex(-1);
     setSegments([]);
     speech.cancel();
+    instrRef.current?.pause();
   };
 
   const anyPhase = CATEGORY_ORDER.some((k) => phases[k]);

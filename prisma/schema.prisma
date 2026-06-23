@@ -142,6 +142,7 @@ model Exercise {
   defaultSec Int? // navržená délka úseku v sekundách
   ownerId    String? // kdo cvik zadal (null = systémový/seedovaný)
   isPrivate  Boolean  @default(false) // soukromé → nenabízí se veřejně
+  audioKey   String? // klíč MP3 instrukce v úložišti (R2) – přehraje se místo čtení
   data       Json? // volná struktura (kompatibilní s legacy drills.json)
   createdAt  DateTime @default(now())
 
@@ -340,6 +341,7 @@ model BlockItem {
   voiceText   String? // detailní pokyn čtený na začátku úseku
   coop        String? // najednou|stridave|v_pulce|cele_kolo
   durationSec Int     @default(180)
+  audioKey    String? // zkopírovaný klíč MP3 instrukce z cviku (přehraje se místo čtení)
   exerciseId  String? // provenience z číselníku Exercise (lookup dle sportu)
 
   block    Block     @relation(fields: [blockId], references: [id], onDelete: Cascade)

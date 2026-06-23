@@ -38,6 +38,7 @@ export interface Segment {
   roundNum?: number; // pořadí kola v rámci fáze
   totalRoundsInPhase?: number;
   nextName?: string; // název následujícího segmentu (doplněno po sestavení)
+  audioUrl?: string; // MP3 instrukce – přehraje se místo čtení (TTS)
 }
 
 export interface GenerateOptions {

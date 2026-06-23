@@ -253,6 +253,7 @@ export async function addItemFromExercise(
       voiceText: ex.voiceText,
       coop: ex.coop ?? "najednou",
       durationSec: ex.defaultSec ?? 180,
+      audioKey: ex.audioKey,
     },
   });
   revalidate(block.trainingId);

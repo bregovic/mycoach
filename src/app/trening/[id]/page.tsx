@@ -52,6 +52,7 @@ export default async function PresetTrainingPage({
         voiceText: it.voiceText,
         coop: it.coop,
         durationSec: it.durationSec,
+        audioKey: it.audioKey,
       })),
     })),
   });

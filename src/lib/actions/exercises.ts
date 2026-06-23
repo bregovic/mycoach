@@ -3,7 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { storage } from "@/lib/storage";
 import { CATEGORY_ORDER } from "@/lib/trainer/types";
+
+const AUDIO_PREFIX = "mycoach/exercise-audio";
 
 const COOPS = ["najednou", "stridave", "v_pulce", "cele_kolo"];
 
@@ -163,11 +166,49 @@ export async function updateExercise(input: {
 
 export async function deleteExercise(id: string): Promise<void> {
   const userId = await requireUser();
-  const ex = await prisma.exercise.findUnique({ where: { id }, select: { ownerId: true } });
+  const ex = await prisma.exercise.findUnique({ where: { id }, select: { ownerId: true, audioKey: true } });
   if (!ex) return;
   const admin = (await roleOf(userId)) === "admin";
   if (ex.ownerId !== userId && !admin) return; // mažu jen vlastní (nebo admin)
+  if (ex.audioKey) await storage.delete(ex.audioKey);
   await prisma.exercise.delete({ where: { id } });
+  revalidate();
+}
+
+// --- MP3 instrukce ke cviku ------------------------------------------------
+
+async function canEditExercise(userId: string, id: string): Promise<{ audioKey: string | null } | null> {
+  const ex = await prisma.exercise.findUnique({ where: { id }, select: { ownerId: true, audioKey: true } });
+  if (!ex) return null;
+  const admin = (await roleOf(userId)) === "admin";
+  if (ex.ownerId !== userId && !admin) return null;
+  return { audioKey: ex.audioKey };
+}
+
+/** Nahraje MP3 instrukci ke cviku (vlastník/admin). FormData: exerciseId + file. */
+export async function uploadExerciseAudio(formData: FormData): Promise<void> {
+  const userId = await requireUser();
+  const id = String(formData.get("exerciseId") ?? "");
+  const file = formData.get("file");
+  if (!(file instanceof File) || !id) return;
+  const ex = await canEditExercise(userId, id);
+  if (!ex) return;
+  const okType = file.type === "audio/mpeg" || file.name.toLowerCase().endsWith(".mp3");
+  if (!okType || file.size === 0 || file.size > 8 * 1024 * 1024) return; // max 8 MB
+
+  const buf = Buffer.from(await file.arrayBuffer());
+  const key = await storage.save(buf, file.name || "instrukce.mp3", AUDIO_PREFIX);
+  if (ex.audioKey) await storage.delete(ex.audioKey);
+  await prisma.exercise.update({ where: { id }, data: { audioKey: key } });
+  revalidate();
+}
+
+export async function removeExerciseAudio(id: string): Promise<void> {
+  const userId = await requireUser();
+  const ex = await canEditExercise(userId, id);
+  if (!ex) return;
+  if (ex.audioKey) await storage.delete(ex.audioKey);
+  await prisma.exercise.update({ where: { id }, data: { audioKey: null } });
   revalidate();
 }
 

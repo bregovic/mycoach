@@ -9,7 +9,7 @@ import {
   type CatPreset,
 } from "@/components/catalog/catalog-manager";
 
-export const metadata = { title: "Katalog cviků" };
+export const metadata = { title: "Katalog" };
 
 export default async function CatalogPage() {
   const session = await auth();
@@ -33,6 +33,7 @@ export default async function CatalogPage() {
         spokenName: true,
         voiceText: true,
         isPrivate: true,
+        audioKey: true,
         ownerId: true,
         sport: { select: { slug: true } },
       },
@@ -52,6 +53,7 @@ export default async function CatalogPage() {
     spokenName: e.spokenName,
     voiceText: e.voiceText,
     isPrivate: e.isPrivate,
+    audioKey: e.audioKey,
     sportSlug: e.sport.slug,
     mine: e.ownerId === userId,
   }));
@@ -66,9 +68,9 @@ export default async function CatalogPage() {
 
   return (
     <main className="min-h-dvh bg-gradient-to-b from-zinc-50 to-zinc-100/40">
-      <AppHeader back={{ href: "/dashboard", label: "Katalog cviků" }} />
+      <AppHeader back={{ href: "/dashboard", label: "Katalog" }} />
       <section className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
-        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Katalog cviků</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-zinc-900">Katalog</h1>
         <p className="mt-1 text-sm text-zinc-500">
           Sdílený číselník podle sportu. Vidíš veřejné cviky i svoje. Úprava cizího cviku vytvoří
           tvou kopii.

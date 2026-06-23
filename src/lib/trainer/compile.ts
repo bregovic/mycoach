@@ -16,6 +16,12 @@ export interface AuthoredItem {
   voiceText?: string | null;
   coop?: string | null;
   durationSec: number;
+  audioKey?: string | null; // MP3 instrukce v úložišti
+}
+
+/** URL pro přehrání MP3 instrukce (servíruje přihlášený endpoint). */
+function audioUrlOf(key?: string | null): string | undefined {
+  return key ? `/api/exercise-audio?key=${encodeURIComponent(key)}` : undefined;
 }
 
 export interface AuthoredBlock {
@@ -74,6 +80,7 @@ export function compileTraining(t: AuthoredTraining): Segment[] {
           voiceText: it.voiceText ?? "",
           coop: normCoop(it.coop),
           duration: it.durationSec,
+          audioUrl: audioUrlOf(it.audioKey),
         });
       }
       // pauza mezi koly bloku (ne za posledním kolem)
