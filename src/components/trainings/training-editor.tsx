@@ -407,33 +407,37 @@ function BlockCard({
               placeholder="Hledat cvik v číselníku…"
               className={input}
             />
-            <div className="mt-2 max-h-56 space-y-1 overflow-auto">
-              {filtered.length === 0 ? (
-                <p className="px-1 py-2 text-sm text-zinc-400">Nic nenalezeno.</p>
-              ) : (
-                filtered.map((e) => {
-                  const already = inBlock.has(e.id);
-                  return (
-                    <button
-                      key={e.id}
-                      type="button"
-                      disabled={already}
-                      onClick={() => addFromCatalog(e)}
-                      className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-2 text-left text-sm transition hover:bg-white disabled:opacity-40"
-                    >
-                      <span className="min-w-0 truncate text-zinc-800">
-                        {e.isPrivate && <span title="Soukromé">🔒 </span>}
-                        {e.name}
-                      </span>
-                      <span className="shrink-0 text-xs text-zinc-400">
-                        {e.category ? `${CATEGORY_LABELS[e.category as keyof typeof CATEGORY_LABELS] ?? e.category} · ` : ""}
-                        {already ? "✓ v bloku" : `${e.defaultSec ?? 180}s`}
-                      </span>
-                    </button>
-                  );
-                })
-              )}
-            </div>
+            {q ? (
+              <div className="mt-2 max-h-56 space-y-1 overflow-auto">
+                {filtered.length === 0 ? (
+                  <p className="px-1 py-2 text-sm text-zinc-400">Nic nenalezeno.</p>
+                ) : (
+                  filtered.map((e) => {
+                    const already = inBlock.has(e.id);
+                    return (
+                      <button
+                        key={e.id}
+                        type="button"
+                        disabled={already}
+                        onClick={() => addFromCatalog(e)}
+                        className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-2 text-left text-sm transition hover:bg-white disabled:opacity-40"
+                      >
+                        <span className="min-w-0 truncate text-zinc-800">
+                          {e.isPrivate && <span title="Soukromé">🔒 </span>}
+                          {e.name}
+                        </span>
+                        <span className="shrink-0 text-xs text-zinc-400">
+                          {e.category ? `${CATEGORY_LABELS[e.category as keyof typeof CATEGORY_LABELS] ?? e.category} · ` : ""}
+                          {already ? "✓ v bloku" : `${e.defaultSec ?? 180}s`}
+                        </span>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            ) : (
+              <p className="mt-2 px-1 py-2 text-sm text-zinc-400">Začni psát název cviku…</p>
+            )}
             {note && <p className="mt-1 text-xs text-amber-600">{note}</p>}
             {filter.trim() && (
               <div className="mt-2 flex items-center gap-2 border-t border-zinc-200 pt-2">
