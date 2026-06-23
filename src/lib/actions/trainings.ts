@@ -168,7 +168,8 @@ export async function updateBlock(input: {
       category,
       rounds: clampInt(input.rounds, 1, 50, 1),
       restSec: clampInt(input.restSec, 0, 600, 60),
-      restBetweenItems: Boolean(input.restBetweenItems),
+      // restBetweenItems měníme jen když je výslovně zadané (jinak zachovej stav)
+      ...(input.restBetweenItems !== undefined ? { restBetweenItems: input.restBetweenItems } : {}),
     },
   });
   revalidate(block.trainingId);

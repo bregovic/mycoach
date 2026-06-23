@@ -332,7 +332,6 @@ function BlockCard({
         category: String(fd.get("category") ?? "") || null,
         rounds: Number(fd.get("rounds") ?? 1),
         restSec: Number(fd.get("restSec") ?? 60),
-        restBetweenItems: fd.get("restBetweenItems") === "on",
       }),
     );
   }
@@ -377,7 +376,6 @@ function BlockCard({
               category: String(fd.get("category") ?? "") || null,
               rounds: Number(fd.get("rounds") ?? 1),
               restSec: Number(fd.get("restSec") ?? 60),
-              restBetweenItems: fd.get("restBetweenItems") === "on",
             }),
           );
         }}
