@@ -149,7 +149,10 @@ Engine je **sport-agnostický** — box je jen první „disciplína" (dataset).
     Hotovo: procházení/hledání, odběr, **autorský editor** (`/balicky/[slug]/upravit`, jen vlastník),
     **lookup** – uživatel si přidává další prvky z katalogu `ElementPreset` (per-user, mimo šablonu).
     ⏭ placené (Stripe).
-12. ⏭ **Plány zdarma (trénink)**: trenér/admin složí tréninkový plán, uživatel si ho „nasadí"
+12. ✅ **Oddíly** (`/oddily`): kluby s logem/adresou/veřejným flagem, rozvrh (dny+čas) → generování
+    termínů, členství + pozvánky podle e-mailu (in-app), docházka (RSVP), stav termínu (bez účastníků
+    = Zrušeno), potvrzení trenérem, přidělení tréninku k termínu. ⏭ reálné odesílání e-mailu pozvánek.
+13. ⏭ **Plány zdarma (trénink)**: trenér/admin složí tréninkový plán, uživatel si ho „nasadí"
     (`Enrollment`). Pozn.: časem nejspíš sjednotit s `Package` jako jeden „subscribable bundle".
 
 **Fáze 3 — monetizace (později):**
