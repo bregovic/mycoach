@@ -23,11 +23,6 @@ const STATE: Record<Segment["kind"], { ring: string; bar: string; text: string; 
   finish: { ring: "ring-amber-300", bar: "bg-amber-500", text: "text-amber-600", tag: "bg-amber-50 text-amber-700" },
 };
 
-function findNextWork(segs: Segment[], from: number): Segment | null {
-  for (let j = from + 1; j < segs.length; j++) if (segs[j].kind === "work") return segs[j];
-  return null;
-}
-
 /** Předpřipravený (autorovaný) trénink k přehrání místo procedurálního generování. */
 export interface TrainerPreset {
   title: string;
@@ -320,8 +315,10 @@ export function Trainer({
       }
 
       // Naplánuj ohlášení dalšího cviku během pauzy (ať navazuje na jeho start).
-      if (sg.kind === "rest" || sg.kind === "prepare") {
-        const nw = findNextWork(segs, i);
+      // Jen když HNED následuje cvik – jinak (dvě pauzy za sebou) by se instrukce
+      // ohlásila dvakrát; ohlásí ji ta poslední pauza před cvikem.
+      if ((sg.kind === "rest" || sg.kind === "prepare") && segs[i + 1]?.kind === "work") {
+        const nw = segs[i + 1];
         if (nw) {
           if (nw.audioUrl) {
             // přednačti, ať odhadneme délku MP3 a spustíme ji včas
