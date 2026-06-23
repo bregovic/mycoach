@@ -43,30 +43,27 @@ export function TodayTasks({ tasks }: { tasks: TodayTask[] }) {
             {t.note && <span className="truncate text-xs text-zinc-400">· {t.note}</span>}
             {st && <span className="text-xs font-medium text-zinc-400">— {st.label}</span>}
 
-            <div className="ml-auto flex items-center gap-1">
+            <div className="ml-auto flex w-full items-center gap-2 sm:w-auto">
               <button
                 type="button"
                 onClick={() => set(t.id, t.status, "done")}
-                title="Splněno"
-                className={`rounded-md px-2 py-1 text-xs font-medium transition ${t.status === "done" ? "bg-green-600 text-white" : "border border-zinc-300 text-zinc-600 hover:bg-zinc-100"}`}
+                className={`flex-1 rounded-lg px-3 py-1.5 text-xs font-medium transition sm:flex-none ${t.status === "done" ? "bg-green-600 text-white hover:bg-green-700" : "border border-green-300 text-green-700 hover:bg-green-50"}`}
               >
-                ✓
+                ✓ Splněno
               </button>
               <button
                 type="button"
                 onClick={() => set(t.id, t.status, "postponed")}
-                title="Odloženo"
-                className={`rounded-md px-2 py-1 text-xs font-medium transition ${t.status === "postponed" ? "bg-amber-500 text-white" : "border border-zinc-300 text-zinc-600 hover:bg-zinc-100"}`}
+                className={`flex-1 rounded-lg px-3 py-1.5 text-xs font-medium transition sm:flex-none ${t.status === "postponed" ? "bg-amber-500 text-white hover:bg-amber-600" : "border border-amber-300 text-amber-700 hover:bg-amber-50"}`}
               >
-                ⏭
+                ⏭ Odložit
               </button>
               <button
                 type="button"
                 onClick={() => set(t.id, t.status, "cancelled")}
-                title="Zrušeno"
-                className={`rounded-md px-2 py-1 text-xs font-medium transition ${t.status === "cancelled" ? "bg-red-600 text-white" : "border border-zinc-300 text-zinc-600 hover:bg-zinc-100"}`}
+                className={`flex-1 rounded-lg px-3 py-1.5 text-xs font-medium transition sm:flex-none ${t.status === "cancelled" ? "bg-red-600 text-white hover:bg-red-700" : "border border-red-300 text-red-700 hover:bg-red-50"}`}
               >
-                ✕
+                ✕ Zrušit
               </button>
             </div>
           </div>
