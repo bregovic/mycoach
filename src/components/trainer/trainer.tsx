@@ -110,7 +110,8 @@ export function Trainer({
     announced: false,
   });
   const preAudioRef = useRef<HTMLAudioElement | null>(null);
-  const workPreannouncedRef = useRef(false);
+  // Index cviku, jehož instrukce už zazněla v pauze (předohlášení); -1 = žádný.
+  const preAnnouncedWorkIdxRef = useRef(-1);
   // Pozdržení odpočtu (u aktivní pauzy: nejdřív „konec" + pokyn ke kondici, pak běh).
   const holdRef = useRef(false);
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -282,8 +283,8 @@ export function Trainer({
       if (sg.kind === "work") {
         // Na úplném začátku „start", jinak „round_start".
         const cueType = kickoff ? "start" : "round_start";
-        const wasPre = workPreannouncedRef.current;
-        workPreannouncedRef.current = false;
+        const wasPre = preAnnouncedWorkIdxRef.current === i;
+        preAnnouncedWorkIdxRef.current = -1;
         if (wasPre) {
           // instrukce už zazněla v pauze → jen cue (žádné čtení přes sebe)
           if (!playCue(cueType)) audio.playBell(false);
@@ -361,7 +362,7 @@ export function Trainer({
       const pre = preRef.current;
       if (pre.work && !pre.announced && pre.leadSec > 0 && next <= pre.leadSec) {
         pre.announced = true;
-        workPreannouncedRef.current = true;
+        preAnnouncedWorkIdxRef.current = i + 1; // hned následující cvik
         readInstruction(pre.work);
       }
     }
@@ -437,16 +438,35 @@ export function Trainer({
       speech.pause();
       instrRef.current?.pause();
       cueRef.current?.pause();
+      // Pozdržení (aktivní pauza): zastav pojistku, ať neuvolní hold během pauzy.
+      if (holdTimerRef.current) {
+        clearTimeout(holdTimerRef.current);
+        holdTimerRef.current = null;
+      }
     } else {
       audio.unlock();
       setRunning(true);
       speech.resume();
+      // Dohraj rozečtenou MP3 instrukci/cue (jinak by po pauze zůstaly stát).
+      if (instrRef.current && !instrRef.current.ended && instrRef.current.currentTime > 0) {
+        void instrRef.current.play().catch(() => {});
+      }
+      if (cueRef.current && !cueRef.current.ended && cueRef.current.currentTime > 0) {
+        void cueRef.current.play().catch(() => {});
+      }
+      // Obnov pojistku holdu, pokud odpočet stále drží.
+      if (holdRef.current && !holdTimerRef.current) {
+        holdTimerRef.current = setTimeout(() => {
+          holdTimerRef.current = null;
+          holdRef.current = false;
+        }, 15000);
+      }
     }
   };
 
   const reset = () => {
     preRef.current = { work: null, leadSec: 0, announced: false };
-    workPreannouncedRef.current = false;
+    preAnnouncedWorkIdxRef.current = -1;
     holdRef.current = false;
     if (holdTimerRef.current) {
       clearTimeout(holdTimerRef.current);

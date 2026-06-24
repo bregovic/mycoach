@@ -10,12 +10,12 @@ import {
   type TaskDTO,
 } from "@/components/calendar/calendar-view";
 import {
-  dateKey,
   keyToDate,
   monthMatrix,
   monthParam,
   parseMonthParam,
   shiftMonth,
+  todayKey as todayKeyTz,
 } from "@/lib/calendar";
 import { ensureScheduleTasks } from "@/lib/calendar-tasks";
 
@@ -69,13 +69,13 @@ export default async function CalendarPage({
   const prev = shiftMonth(year, month0, -1);
   const next = shiftMonth(year, month0, 1);
   const label = monthFmt.format(new Date(Date.UTC(year, month0, 1)));
-  const todayKey = dateKey(new Date());
+  const todayKey = todayKeyTz();
 
   return (
     <main className="min-h-dvh bg-gradient-to-b from-zinc-50 to-zinc-100/40">
       <AppHeader back={{ href: "/dashboard", label: "Kalendář" }} />
 
-      <section className="mx-auto max-w-3xl px-6 py-12">
+      <section className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-semibold capitalize tracking-tight text-zinc-900">{label}</h1>
           <div className="flex items-center gap-1">

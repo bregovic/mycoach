@@ -96,7 +96,7 @@ export default async function ProfilePage() {
     <main className="min-h-dvh bg-gradient-to-b from-zinc-50 to-zinc-100/40">
       <AppHeader back={{ href: "/dashboard", label: "Profil" }} />
 
-      <section className="mx-auto max-w-3xl px-6 py-12">
+      <section className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">Profil</h1>
           <Link

@@ -47,7 +47,7 @@ export interface ClubDTO {
     myStatus: string | null; // going | excused | null
     trainingId: string | null;
     trainingTitle: string | null;
-    attendees: { name: string; image: string | null; status: "going" | "excused" }[];
+    attendees: { userId: string; name: string; image: string | null; status: "going" | "excused" }[];
   }[];
   trainings: { id: string; title: string }[];
 }
@@ -207,8 +207,8 @@ export function ClubView({ club }: { club: ClubDTO }) {
                   <span className="text-xs font-medium text-green-700">Přijde:</span>
                   {s.attendees
                     .filter((a) => a.status === "going")
-                    .map((a, k) => (
-                      <span key={k} className="inline-flex items-center gap-1" title={a.name}>
+                    .map((a) => (
+                      <span key={a.userId} className="inline-flex items-center gap-1" title={a.name}>
                         <Avatar src={a.image} name={a.name} size={22} />
                         <span className="text-xs text-zinc-600">{a.name}</span>
                       </span>
@@ -220,8 +220,8 @@ export function ClubView({ club }: { club: ClubDTO }) {
                   <span className="text-xs font-medium text-red-700">Omluveni:</span>
                   {s.attendees
                     .filter((a) => a.status === "excused")
-                    .map((a, k) => (
-                      <span key={k} className="inline-flex items-center gap-1" title={a.name}>
+                    .map((a) => (
+                      <span key={a.userId} className="inline-flex items-center gap-1" title={a.name}>
                         <Avatar src={a.image} name={a.name} size={20} />
                         <span className="text-xs text-zinc-500 line-through">{a.name}</span>
                       </span>

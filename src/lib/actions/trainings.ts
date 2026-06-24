@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { CATEGORY_ORDER } from "@/lib/trainer/types";
-import { dateKey, keyToDate } from "@/lib/calendar";
+import { keyToDate, todayKey } from "@/lib/calendar";
 import { storage } from "@/lib/storage";
 
 const ITEM_AUDIO_PREFIX = "mycoach/exercise-audio";
@@ -119,7 +119,7 @@ export async function addTrainingToCalendar(trainingId: string): Promise<void> {
     data: {
       userId,
       activityId: activity.id,
-      date: keyToDate(dateKey(new Date())),
+      date: keyToDate(todayKey()),
       title: training.title.slice(0, 80),
       durationMin: training.targetMin ?? null,
       note: "Z veřejných tréninků",
@@ -191,8 +191,8 @@ export async function setBlockRest(blockId: string, exerciseId: string | null): 
       data: { restName: null, restSpokenName: null, restVoiceText: null, restAudioKey: null },
     });
   } else {
-    const ex = await prisma.exercise.findUnique({
-      where: { id: exerciseId },
+    const ex = await prisma.exercise.findFirst({
+      where: { id: exerciseId, OR: [{ isPrivate: false }, { ownerId: userId }] },
       select: { name: true, spokenName: true, voiceText: true, audioKey: true },
     });
     if (ex) {
@@ -308,7 +308,9 @@ export async function addItemFromExercise(
   });
   if (!block) return { added: false };
 
-  const ex = await prisma.exercise.findUnique({ where: { id: exerciseId } });
+  const ex = await prisma.exercise.findFirst({
+    where: { id: exerciseId, OR: [{ isPrivate: false }, { ownerId: userId }] },
+  });
   if (!ex) return { added: false };
 
   const dup = await prisma.blockItem.findFirst({

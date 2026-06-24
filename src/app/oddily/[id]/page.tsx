@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/app-header";
 import { ensureClubSessions } from "@/lib/club-sessions";
-import { dateKey, keyToDate } from "@/lib/calendar";
+import { dateKey, keyToDate, todayKey as todayKeyTz } from "@/lib/calendar";
 import { sessionStatus } from "@/lib/clubs";
 import { ClubView, type ClubDTO } from "@/components/clubs/club-view";
 
@@ -34,7 +34,7 @@ export default async function ClubDetailPage({ params }: { params: Promise<{ id:
   if (!isMember && !club.isPublic) redirect("/oddily");
 
   // Termíny na ~4 týdny dopředu
-  const todayKey = dateKey(new Date());
+  const todayKey = todayKeyTz();
   const end = keyToDate(todayKey);
   end.setUTCDate(end.getUTCDate() + 28);
   const endKey = dateKey(end);
@@ -90,8 +90,8 @@ export default async function ClubDetailPage({ params }: { params: Promise<{ id:
         trainingId: s.trainingId,
         trainingTitle: s.training?.title ?? null,
         attendees: [
-          ...going.map((a) => ({ name: nameOf(a), image: a.user.image, status: "going" as const })),
-          ...excused.map((a) => ({ name: nameOf(a), image: a.user.image, status: "excused" as const })),
+          ...going.map((a) => ({ userId: a.userId, name: nameOf(a), image: a.user.image, status: "going" as const })),
+          ...excused.map((a) => ({ userId: a.userId, name: nameOf(a), image: a.user.image, status: "excused" as const })),
         ],
       };
     }),

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { subscribeToPackage, unsubscribePackage } from "@/lib/actions/packages";
 
 export interface ElementView {
@@ -104,6 +104,16 @@ export function PackageSubscribe({
   }, [elements, existing]);
 
   const [rows, setRows] = useState<Row[]>(initial);
+  // Po uložení/zrušení (router.refresh) se změní serverová data → resync řádků,
+  // ať „Uložit změny" hned ukáže aktuální stav (ne starý useState init).
+  const serverSig = useMemo(
+    () => JSON.stringify(existing) + "|" + elements.map((e) => `${e.id}:${e.defaultIntervalDays}`).join(","),
+    [existing, elements],
+  );
+  useEffect(() => {
+    setRows(initial);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverSig]);
   const [seq, setSeq] = useState(0);
   const [lookupOpen, setLookupOpen] = useState(false);
   const [filter, setFilter] = useState("");

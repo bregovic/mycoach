@@ -57,7 +57,7 @@ export function PackageEditor({ pkg }: { pkg: PackageDTO }) {
         onSubmit={(e: FormEvent<HTMLFormElement>) => {
           e.preventDefault();
           const fd = new FormData(e.currentTarget);
-          startTransition(() =>
+          run(() =>
             updatePackageMeta({
               id: pkg.id,
               title: String(fd.get("title") ?? ""),

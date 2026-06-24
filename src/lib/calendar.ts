@@ -27,6 +27,19 @@ export function dateKey(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
+/**
+ * „Dnešní" datum v časové zóně uživatele (default ČR). Server běží v UTC, takže
+ * `dateKey(new Date())` by večer ukázal už zítřek – tohle vrací správný lokální den.
+ */
+export function todayKey(timeZone = "Europe/Prague"): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
 export function keyToDate(key: string): Date {
   return new Date(key + "T00:00:00.000Z");
 }

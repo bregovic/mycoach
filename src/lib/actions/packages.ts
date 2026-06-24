@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { dateKey, keyToDate } from "@/lib/calendar";
+import { dateKey, keyToDate, todayKey } from "@/lib/calendar";
 import { ensureScheduleTasks } from "@/lib/calendar-tasks";
 import { CATEGORY_LABELS } from "@/lib/packages";
 
@@ -60,26 +60,31 @@ export async function subscribeToPackage(
   const userId = await requireUserId();
   const pkg = await prisma.package.findFirst({
     where: { id: packageId, OR: [{ published: true }, { authorId: userId }] },
-    select: { id: true },
+    select: { id: true, elements: { select: { id: true } } },
   });
   if (!pkg) return;
 
+  // Omez počet prvků a validuj elementId proti danému balíčku (anti-DoS / IDOR).
+  const validElementIds = new Set(pkg.elements.map((e) => e.id));
+  const safeSelections = selections.slice(0, 100);
+
   await teardownSubscription(userId, packageId);
 
-  const todayKey = dateKey(new Date());
-  const start = keyToDate(todayKey);
+  const today = todayKey();
+  const start = keyToDate(today);
   const sub = await prisma.subscription.create({
     data: { userId, packageId, startDate: start },
   });
 
-  for (const sel of selections) {
+  for (const sel of safeSelections) {
     const interval = clampInterval(sel.intervalDays);
     const name = String(sel.name ?? "").trim().slice(0, 60) || "Prvek";
+    const elementId = sel.elementId && validElementIds.has(sel.elementId) ? sel.elementId : null;
     if (!sel.enabled) {
       await prisma.subscriptionElement.create({
         data: {
           subscriptionId: sub.id,
-          elementId: sel.elementId || null,
+          elementId,
           name,
           color: color(sel.color),
           enabled: false,
@@ -99,7 +104,7 @@ export async function subscribeToPackage(
     await prisma.subscriptionElement.create({
       data: {
         subscriptionId: sub.id,
-        elementId: sel.elementId || null,
+        elementId,
         name,
         color: activity.color,
         enabled: true,
@@ -110,9 +115,9 @@ export async function subscribeToPackage(
     });
   }
 
-  const end = keyToDate(todayKey);
+  const end = keyToDate(today);
   end.setUTCDate(end.getUTCDate() + 56);
-  await ensureScheduleTasks(userId, todayKey, dateKey(end));
+  await ensureScheduleTasks(userId, today, dateKey(end));
 
   revalidatePath("/balicky");
   revalidatePath("/kalendar");

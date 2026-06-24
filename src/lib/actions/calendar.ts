@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { keyToDate, dateKey } from "@/lib/calendar";
+import { keyToDate, dateKey, todayKey } from "@/lib/calendar";
 import { ensureScheduleTasks } from "@/lib/calendar-tasks";
 
 async function requireUserId(): Promise<string> {
@@ -190,7 +190,7 @@ export async function createSchedule(input: {
   const startKey =
     input.startKey && /^\d{4}-\d{2}-\d{2}$/.test(input.startKey)
       ? input.startKey
-      : dateKey(new Date());
+      : todayKey();
 
   const schedule = await prisma.activitySchedule.create({
     data: { userId, activityId: activity.id, weekdays, startDate: keyToDate(startKey) },

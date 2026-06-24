@@ -389,8 +389,8 @@ function BlockCard({
       >
         <div className="flex items-start gap-2">
           <div className="flex flex-col gap-0.5 pt-1">
-            <button type="button" disabled={isFirst} onClick={() => run(() => moveBlock(block.id, "up"))} className="text-zinc-400 transition enabled:hover:text-zinc-700 disabled:opacity-30" aria-label="Nahoru">▲</button>
-            <button type="button" disabled={isLast} onClick={() => run(() => moveBlock(block.id, "down"))} className="text-zinc-400 transition enabled:hover:text-zinc-700 disabled:opacity-30" aria-label="Dolů">▼</button>
+            <button type="button" disabled={isFirst} onClick={() => run(() => moveBlock(block.id, "up"))} className="flex h-8 w-8 items-center justify-center rounded text-zinc-400 transition enabled:hover:bg-zinc-100 enabled:hover:text-zinc-700 disabled:opacity-30" aria-label="Nahoru">▲</button>
+            <button type="button" disabled={isLast} onClick={() => run(() => moveBlock(block.id, "down"))} className="flex h-8 w-8 items-center justify-center rounded text-zinc-400 transition enabled:hover:bg-zinc-100 enabled:hover:text-zinc-700 disabled:opacity-30" aria-label="Dolů">▼</button>
           </div>
           <div className="flex-1">
             <input
@@ -661,8 +661,8 @@ function ItemRow({
     >
       <div className="flex items-start gap-3">
         <div className="flex flex-col gap-0.5 pt-1 text-xs">
-          <button type="button" disabled={isFirst} onClick={() => run(() => moveItem(item.id, "up"))} className="text-zinc-400 transition enabled:hover:text-zinc-700 disabled:opacity-30" aria-label="Nahoru">▲</button>
-          <button type="button" disabled={isLast} onClick={() => run(() => moveItem(item.id, "down"))} className="text-zinc-400 transition enabled:hover:text-zinc-700 disabled:opacity-30" aria-label="Dolů">▼</button>
+          <button type="button" disabled={isFirst} onClick={() => run(() => moveItem(item.id, "up"))} className="flex h-8 w-8 items-center justify-center rounded text-zinc-400 transition enabled:hover:bg-zinc-100 enabled:hover:text-zinc-700 disabled:opacity-30" aria-label="Nahoru">▲</button>
+          <button type="button" disabled={isLast} onClick={() => run(() => moveItem(item.id, "down"))} className="flex h-8 w-8 items-center justify-center rounded text-zinc-400 transition enabled:hover:bg-zinc-100 enabled:hover:text-zinc-700 disabled:opacity-30" aria-label="Dolů">▼</button>
         </div>
 
         {open ? (

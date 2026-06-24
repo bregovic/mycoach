@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { AppHeader } from "@/components/app-header";
 import { ensureScheduleTasks } from "@/lib/calendar-tasks";
-import { dateKey, keyToDate } from "@/lib/calendar";
+import { keyToDate, todayKey as todayKeyTz } from "@/lib/calendar";
 import { minToHHMM } from "@/lib/clubs";
 import { TodayTasks } from "@/components/dashboard/today-tasks";
 
@@ -26,7 +26,7 @@ export default async function DashboardPage() {
   if (!session?.user?.id) redirect("/login");
   const userId = session.user.id;
 
-  const todayKey = dateKey(new Date());
+  const todayKey = todayKeyTz();
   const today = keyToDate(todayKey);
   await ensureScheduleTasks(userId, todayKey, todayKey);
 
